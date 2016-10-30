@@ -21,10 +21,35 @@
     <ClCompile Include="xTime.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="DDSTextureLoader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cubeModel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="modelClass.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="xTime.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="cubeModel.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DDSTextureLoader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="modelClass.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="OBJ_PS.hlsl" />
+    <FxCompile Include="OBJ_VS.hlsl" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="moon.dds" />
   </ItemGroup>
 </Project>

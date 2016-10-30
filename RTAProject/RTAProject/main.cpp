@@ -1,14 +1,16 @@
 #include <Windows.h>
 #include <ctime>
-#include <iostream>
-#include <d3d11.h>
-#pragma comment(lib,"d3d11.lib")
-#include <DirectXMath.h>
+//#include <iostream>
+//#include <d3d11.h>
+//#pragma comment(lib,"d3d11.lib")
+//#include <DirectXMath.h>
+#include "cubeModel.h"
 
 #include <cmath>
 #include "xTime.h"
-using namespace DirectX;
-using namespace std;
+
+
+//using namespace DirectX;
 
 #define BUFFER_WIDTH	800
 #define BUFFER_HEIGHT	800
@@ -20,8 +22,8 @@ class APP
 {
 	struct SCENE_BUFFER
 	{
-		XMMATRIX m4x4_view;
-		XMMATRIX m4x4_projection;
+		XMFLOAT4X4 m4x4_view;
+		XMFLOAT4X4 m4x4_projection;
 	};
 
 	HINSTANCE	h_application;
@@ -48,10 +50,16 @@ class APP
 	ID3D11RasterizerState* p_rsSolid;
 	ID3D11RasterizerState* p_rsWireframe;
 
-	XMMATRIX m4x4_camera;
-	XMMATRIX m4x4_camTranslate;
+	XMFLOAT4X4 m4x4_camera;
+	XMFLOAT4X4 m4x4_camTranslate;
+	XMFLOAT4X4 m4x4_Identity = { 1,0,0,0,
+								 0,1,0,0,
+								 0,0,1,0,
+								 0,0,0,1 };
 
 	XTime xTime;
+
+	CubeModel* Cube;
 
 	int moveSpeed;
 
@@ -94,13 +102,21 @@ APP::APP(HINSTANCE hinst, WNDPROC proc)
 
 
 	//Matrices
-	scene_matrix.m4x4_view = XMMatrixInverse(NULL, XMMatrixIdentity());
-	scene_matrix.m4x4_view.r[3].m128_f32[2] = -2.0f;
-	scene_matrix.m4x4_projection = XMMatrixPerspectiveFovLH(65, 1, 0.1, 500);
+	XMMATRIX viewMat = XMLoadFloat4x4(&scene_matrix.m4x4_view);
+	viewMat = XMMatrixInverse(NULL, XMMatrixIdentity());
+	XMStoreFloat4x4(&scene_matrix.m4x4_view, viewMat);
+	scene_matrix.m4x4_view.m[3][2] = -2.0f;
 
-	m4x4_camera = XMMatrixIdentity();
-	m4x4_camera.r[3].m128_f32[2] = -2.0f;
-	m4x4_camTranslate = XMMatrixIdentity();
+	XMMATRIX projMat = XMLoadFloat4x4(&scene_matrix.m4x4_projection);
+	projMat = XMMatrixPerspectiveFovLH(65, BUFFER_HEIGHT / BUFFER_WIDTH, 0.1, 500);
+	XMStoreFloat4x4(&scene_matrix.m4x4_projection, projMat);
+
+	m4x4_camera = { 1,0,0,0,
+		0,1,0,0,
+		0,0,1,0,
+		0,0,-2.0f,0 };
+
+	m4x4_camTranslate = m4x4_Identity;
 
 	//Swapchain Descriptor
 	DXGI_SWAP_CHAIN_DESC sc_Descrip;
@@ -222,12 +238,22 @@ APP::APP(HINSTANCE hinst, WNDPROC proc)
 
 	p_device->CreateDepthStencilView(p_depthStencil, &ds_viewDescrip, &p_dsView);
 
+	Cube = new CubeModel();
+	Cube->Initialize(p_device);
+
 
 	p_application = this;
 }
 
 bool APP::Run()
 {
+	xTime.Signal();
+
+	//scene_matrix.m4x4_view = OrthoAffineInverse(cameraMatrix);
+	XMMATRIX viewMat = XMLoadFloat4x4(&m4x4_camera);
+	viewMat = XMMatrixInverse(NULL, viewMat);
+	XMStoreFloat4x4(&scene_matrix.m4x4_view, viewMat);
+
 	//Clear To Back Color
 	const float backColor[4] = { 0, 0, 0.4, 1 };
 	p_context->ClearRenderTargetView(p_RTV, backColor);
@@ -247,20 +273,44 @@ bool APP::Run()
 
 	if (GetAsyncKeyState('W'))
 	{
-		m4x4_camTranslate.r[3].m128_f32[2] = moveSpeed * xTime.Delta();
-		m4x4_camera = XMMatrixMultiply(m4x4_camTranslate, m4x4_camera);
+		m4x4_camTranslate =
+		{ 1, 0, 0, 0,
+			0, 1, 0, 0,
+			0, 0, 1, 0,
+			0, 0, moveSpeed * (float)xTime.Delta(), 1 };
+		XMMATRIX translateMat = XMLoadFloat4x4(&m4x4_camTranslate);
+		XMMATRIX cameraMat = XMLoadFloat4x4(&m4x4_camera);
+
+		cameraMat = XMMatrixMultiply(translateMat, cameraMat);
+
+		XMStoreFloat4x4(&m4x4_camera, cameraMat);
+
 	}
 
 	if (GetAsyncKeyState('S'))
 	{
-		m4x4_camTranslate.r[3].m128_f32[2] = -moveSpeed * xTime.Delta();
-		m4x4_camera = XMMatrixMultiply(m4x4_camTranslate, m4x4_camera);
+		m4x4_camTranslate =
+		{ 1, 0, 0, 0,
+			0, 1, 0, 0,
+			0, 0, 1, 0,
+			0, 0, -moveSpeed * (float)xTime.Delta(), 1 };
+		XMMATRIX translateMat = XMLoadFloat4x4(&m4x4_camTranslate);
+		XMMATRIX cameraMat = XMLoadFloat4x4(&m4x4_camera);
+
+		cameraMat = XMMatrixMultiply(translateMat, cameraMat);
+
+		XMStoreFloat4x4(&m4x4_camera, cameraMat);
 	}
+
 
 	D3D11_MAPPED_SUBRESOURCE map_res;
 	p_context->Map(p_sceneBuffer, NULL, D3D11_MAP_WRITE_DISCARD, 0, &map_res);
 	memcpy(map_res.pData, &scene_matrix, sizeof(SCENE_BUFFER));
 	p_context->Unmap(p_sceneBuffer, 0);
+	
+	p_context->VSSetConstantBuffers(1, 1, &p_sceneBuffer);
+
+	Cube->Render(p_context, xTime.Delta());
 
 	p_swapchain->Present(0, 0);
 	return true;
@@ -269,6 +319,9 @@ bool APP::Run()
 
 bool APP::ShutDown()
 {
+	Cube->Shutdown();
+	delete Cube;
+
 	p_swapchain->Release();
 	p_RTV->Release();
 	p_device->Release();
