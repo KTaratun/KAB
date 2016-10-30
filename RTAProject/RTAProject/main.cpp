@@ -46,7 +46,7 @@ class APP
 	ID3D11Texture2D* p_depthStencil = NULL;
 	ID3D11DepthStencilState* p_dsState;
 	ID3D11DepthStencilView* p_dsView;
-	
+
 	ID3D11RasterizerState* p_rsSolid;
 	ID3D11RasterizerState* p_rsWireframe;
 
@@ -67,13 +67,13 @@ public:
 	APP(HINSTANCE hinst, WNDPROC proc);
 	bool Run();
 	bool ShutDown();
-	
+
 };
 APP* p_application;
 
 APP::APP(HINSTANCE hinst, WNDPROC proc)
 {
-/////////// WINDOWS CODE
+	/////////// WINDOWS CODE
 	h_application = hinst;
 	appWndProc = proc;
 
@@ -98,10 +98,10 @@ APP::APP(HINSTANCE hinst, WNDPROC proc)
 	ShowWindow(h_window, SW_SHOW);
 
 	hWnd = h_window;
-//////////////////
+	//////////////////
 
 
-	//Matrices
+		//Matrices
 	XMMATRIX viewMat = XMLoadFloat4x4(&scene_matrix.m4x4_view);
 	viewMat = XMMatrixInverse(NULL, XMMatrixIdentity());
 	XMStoreFloat4x4(&scene_matrix.m4x4_view, viewMat);
@@ -114,7 +114,7 @@ APP::APP(HINSTANCE hinst, WNDPROC proc)
 	m4x4_camera = { 1,0,0,0,
 		0,1,0,0,
 		0,0,1,0,
-		0,0,-2.0f,0 };
+		0,0,-2.0f,1 };
 
 	m4x4_camTranslate = m4x4_Identity;
 
@@ -302,12 +302,71 @@ bool APP::Run()
 		XMStoreFloat4x4(&m4x4_camera, cameraMat);
 	}
 
+	if (GetAsyncKeyState('A'))
+	{
+		m4x4_camTranslate =
+		{ 1, 0, 0, 0,
+			0, 1, 0, 0,
+			0, 0, 1, 0,
+			-moveSpeed * (float)xTime.Delta(), 0,0, 1 };
+		XMMATRIX translateMat = XMLoadFloat4x4(&m4x4_camTranslate);
+		XMMATRIX cameraMat = XMLoadFloat4x4(&m4x4_camera);
+
+		cameraMat = XMMatrixMultiply(translateMat, cameraMat);
+
+		XMStoreFloat4x4(&m4x4_camera, cameraMat);
+	}
+
+	if (GetAsyncKeyState('D'))
+	{
+		m4x4_camTranslate =
+		{ 1, 0, 0, 0,
+			0, 1, 0, 0,
+			0, 0, 1, 0,
+			moveSpeed * (float)xTime.Delta(), 0,0, 1 };
+		XMMATRIX translateMat = XMLoadFloat4x4(&m4x4_camTranslate);
+		XMMATRIX cameraMat = XMLoadFloat4x4(&m4x4_camera);
+
+		cameraMat = XMMatrixMultiply(translateMat, cameraMat);
+
+		XMStoreFloat4x4(&m4x4_camera, cameraMat);
+	}
+
+	if (GetAsyncKeyState(VK_SPACE))
+	{
+		m4x4_camTranslate =
+		{ 1, 0, 0, 0,
+			0, 1, 0, 0,
+			0, 0, 1, 0,
+			0, moveSpeed * (float)xTime.Delta(),0, 1 };
+		XMMATRIX translateMat = XMLoadFloat4x4(&m4x4_camTranslate);
+		XMMATRIX cameraMat = XMLoadFloat4x4(&m4x4_camera);
+
+		cameraMat = XMMatrixMultiply(translateMat, cameraMat);
+
+		XMStoreFloat4x4(&m4x4_camera, cameraMat);
+	}
+
+	if (GetAsyncKeyState(VK_CONTROL))
+	{
+		m4x4_camTranslate =
+		{ 1, 0, 0, 0,
+			0, 1, 0, 0,
+			0, 0, 1, 0,
+			0, -moveSpeed * (float)xTime.Delta(),0, 1 };
+		XMMATRIX translateMat = XMLoadFloat4x4(&m4x4_camTranslate);
+		XMMATRIX cameraMat = XMLoadFloat4x4(&m4x4_camera);
+
+		cameraMat = XMMatrixMultiply(translateMat, cameraMat);
+
+		XMStoreFloat4x4(&m4x4_camera, cameraMat);
+	}
 
 	D3D11_MAPPED_SUBRESOURCE map_res;
 	p_context->Map(p_sceneBuffer, NULL, D3D11_MAP_WRITE_DISCARD, 0, &map_res);
 	memcpy(map_res.pData, &scene_matrix, sizeof(SCENE_BUFFER));
 	p_context->Unmap(p_sceneBuffer, 0);
-	
+
 	p_context->VSSetConstantBuffers(1, 1, &p_sceneBuffer);
 
 	Cube->Render(p_context, xTime.Delta());
@@ -326,9 +385,9 @@ bool APP::ShutDown()
 	p_RTV->Release();
 	p_device->Release();
 	p_context->Release();
-	
+
 	p_sceneBuffer->Release();
-	
+
 	p_depthStencil->Release();
 	p_dsState->Release();
 	p_dsView->Release();
