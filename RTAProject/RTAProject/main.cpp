@@ -26,6 +26,17 @@ class APP
 		XMFLOAT4X4 m4x4_projection;
 	};
 
+	struct LIGHT_BUFFER
+	{
+		XMFLOAT4 diffuse_ambientLight;
+
+		XMFLOAT4 diffuse_spotLight;
+		XMFLOAT4 position_spotLight;
+		XMFLOAT4 direction_spotLight;
+		float ratio_spotLight;
+		XMFLOAT3 padding;
+	};
+
 	HINSTANCE	h_application;
 	WNDPROC		appWndProc;
 	HWND		h_window;
@@ -38,9 +49,11 @@ class APP
 	D3D11_VIEWPORT viewport;
 
 	SCENE_BUFFER scene_matrix;
+	LIGHT_BUFFER light_data;
 
 	//Buffers
 	ID3D11Buffer* p_sceneBuffer;
+	ID3D11Buffer* p_lightBuffer;
 
 	//Depth Stencil
 	ID3D11Texture2D* p_depthStencil = NULL;
@@ -62,14 +75,29 @@ class APP
 	CubeModel* Cube;
 
 	int moveSpeed;
-
+	bool mouseMove;
+	bool mouseDown;
+	POINT mouse;
+	POINT mouse2;
 public:
 	APP(HINSTANCE hinst, WNDPROC proc);
 	bool Run();
 	bool ShutDown();
+	void MouseMove();
+	void MouseNoMove();
+
 
 };
 APP* p_application;
+
+void APP::MouseMove()
+{
+	mouseMove = true;
+}
+void APP::MouseNoMove()
+{
+	mouseMove = false;
+}
 
 APP::APP(HINSTANCE hinst, WNDPROC proc)
 {
@@ -108,7 +136,7 @@ APP::APP(HINSTANCE hinst, WNDPROC proc)
 	scene_matrix.m4x4_view.m[3][2] = -2.0f;
 
 	XMMATRIX projMat = XMLoadFloat4x4(&scene_matrix.m4x4_projection);
-	projMat = XMMatrixPerspectiveFovLH(65, BUFFER_HEIGHT / BUFFER_WIDTH, 0.1, 500);
+	projMat = XMMatrixPerspectiveFovLH(65, BUFFER_HEIGHT / BUFFER_WIDTH, 0.1f, 500);
 	XMStoreFloat4x4(&scene_matrix.m4x4_projection, projMat);
 
 	m4x4_camera = { 1,0,0,0,
@@ -117,6 +145,14 @@ APP::APP(HINSTANCE hinst, WNDPROC proc)
 		0,0,-2.0f,1 };
 
 	m4x4_camTranslate = m4x4_Identity;
+
+	//Lights
+	light_data.diffuse_ambientLight = { 0.2f,0.2f,0.2f,1.0f };
+
+	light_data.diffuse_spotLight = { 1,1,1,1 };
+	light_data.position_spotLight = { 0,2,0,1 };
+	light_data.direction_spotLight = { 0.75,-0.75f,-0.75f,1 };
+	light_data.ratio_spotLight = 0.93f;
 
 	//Swapchain Descriptor
 	DXGI_SWAP_CHAIN_DESC sc_Descrip;
@@ -175,8 +211,8 @@ APP::APP(HINSTANCE hinst, WNDPROC proc)
 	ZeroMemory(&viewport, sizeof(D3D11_VIEWPORT));
 	viewport.TopLeftX = 0;
 	viewport.TopLeftY = 0;
-	viewport.Width = sc_Descrip.BufferDesc.Width;
-	viewport.Height = sc_Descrip.BufferDesc.Height;
+	viewport.Width = (FLOAT)sc_Descrip.BufferDesc.Width;
+	viewport.Height = (FLOAT)sc_Descrip.BufferDesc.Height;
 	viewport.MaxDepth = 1.0f;
 
 	//Scene Buffer
@@ -191,12 +227,24 @@ APP::APP(HINSTANCE hinst, WNDPROC proc)
 
 	p_device->CreateBuffer(&sb_Descrip, NULL, &p_sceneBuffer);
 
+	//Light Buffer
+	D3D11_BUFFER_DESC lb_Descrip;
+	ZeroMemory(&lb_Descrip, sizeof(lb_Descrip));
+	lb_Descrip.ByteWidth = sizeof(LIGHT_BUFFER);
+	lb_Descrip.Usage = D3D11_USAGE_DYNAMIC;
+	lb_Descrip.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	lb_Descrip.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	lb_Descrip.MiscFlags = 0;
+	lb_Descrip.StructureByteStride = 0;
+
+	p_device->CreateBuffer(&lb_Descrip, NULL, &p_lightBuffer);
+
 	//Depth Stencil
 	D3D11_TEXTURE2D_DESC ds_texDescrip;
 	ZeroMemory(&ds_texDescrip, sizeof(ds_texDescrip));
 	ds_texDescrip.Width = BUFFER_WIDTH;
 	ds_texDescrip.Height = BUFFER_HEIGHT;
-	ds_texDescrip.MipLevels = 1;
+	ds_texDescrip.MipLevels = 0;
 	ds_texDescrip.ArraySize = 1;
 	ds_texDescrip.Format = DXGI_FORMAT_D32_FLOAT;
 	ds_texDescrip.SampleDesc.Count = 1;
@@ -241,6 +289,7 @@ APP::APP(HINSTANCE hinst, WNDPROC proc)
 	Cube = new CubeModel();
 	Cube->Initialize(p_device);
 
+	mouseMove = false;
 
 	p_application = this;
 }
@@ -250,12 +299,10 @@ bool APP::Run()
 	xTime.Signal();
 
 	//scene_matrix.m4x4_view = OrthoAffineInverse(cameraMatrix);
-	XMMATRIX viewMat = XMLoadFloat4x4(&m4x4_camera);
-	viewMat = XMMatrixInverse(NULL, viewMat);
-	XMStoreFloat4x4(&scene_matrix.m4x4_view, viewMat);
+
 
 	//Clear To Back Color
-	const float backColor[4] = { 0, 0, 0.4, 1 };
+	const float backColor[4] = { 0, 0, 0.4f, 1 };
 	p_context->ClearRenderTargetView(p_RTV, backColor);
 	p_context->ClearDepthStencilView(p_dsView, D3D11_CLEAR_DEPTH, 1.0f, 0);
 
@@ -270,6 +317,8 @@ bool APP::Run()
 		moveSpeed = 15;
 	else
 		moveSpeed = 7;
+
+
 
 	if (GetAsyncKeyState('W'))
 	{
@@ -362,6 +411,29 @@ bool APP::Run()
 		XMStoreFloat4x4(&m4x4_camera, cameraMat);
 	}
 
+	LPPOINT m = &mouse;
+	GetCursorPos(m);
+
+	if (GetAsyncKeyState(VK_RBUTTON) && !mouseDown)
+		mouseDown = true;
+	else if (!GetAsyncKeyState(VK_RBUTTON))
+		mouseDown = false;
+
+	if (mouseDown)
+	{
+		LPPOINT m2 = &mouse2;
+		GetCursorPos(m2);
+
+		XMMATRIX newcamera = XMLoadFloat4x4(&m4x4_camera);
+		XMVECTOR pos = newcamera.r[3];
+		newcamera.r[3] = XMLoadFloat4(&XMFLOAT4(0, 0, 0, 1));
+		newcamera = XMMatrixRotationX(-(mouse2.y - mouse.y)*0.1f)*newcamera*XMMatrixRotationY(-(mouse2.x - mouse.x)*0.1f);
+		newcamera.r[3] = pos;
+
+		XMStoreFloat4x4(&m4x4_camera, newcamera);
+	}
+
+
 	D3D11_MAPPED_SUBRESOURCE map_res;
 	p_context->Map(p_sceneBuffer, NULL, D3D11_MAP_WRITE_DISCARD, 0, &map_res);
 	memcpy(map_res.pData, &scene_matrix, sizeof(SCENE_BUFFER));
@@ -369,7 +441,18 @@ bool APP::Run()
 
 	p_context->VSSetConstantBuffers(1, 1, &p_sceneBuffer);
 
-	Cube->Render(p_context, xTime.Delta());
+	D3D11_MAPPED_SUBRESOURCE light_res;
+	p_context->Map(p_lightBuffer, NULL, D3D11_MAP_WRITE_DISCARD, 0, &light_res);
+	memcpy(light_res.pData, &light_data, sizeof(LIGHT_BUFFER));
+	p_context->Unmap(p_lightBuffer, 0);
+
+	p_context->PSSetConstantBuffers(0, 1, &p_lightBuffer);
+
+	XMMATRIX viewMat = XMLoadFloat4x4(&m4x4_camera);
+	viewMat = XMMatrixInverse(NULL, viewMat);
+	XMStoreFloat4x4(&scene_matrix.m4x4_view, viewMat);
+
+	Cube->Render(p_context, (float)xTime.Delta());
 
 	p_swapchain->Present(0, 0);
 	return true;
@@ -387,6 +470,7 @@ bool APP::ShutDown()
 	p_context->Release();
 
 	p_sceneBuffer->Release();
+	p_lightBuffer->Release();
 
 	p_depthStencil->Release();
 	p_dsState->Release();
@@ -408,6 +492,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, LPTSTR, int)
 	MSG msg; ZeroMemory(&msg, sizeof(msg));
 	while (msg.message != WM_QUIT && myApp.Run())
 	{
+
 		if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
 		{
 			TranslateMessage(&msg);
@@ -432,6 +517,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	if (GetAsyncKeyState(VK_ESCAPE))
 		message = WM_DESTROY;
+
+
 	switch (message)
 	{
 	case (WM_DESTROY): { PostQuitMessage(0); }

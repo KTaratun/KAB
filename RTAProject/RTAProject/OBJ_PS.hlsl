@@ -10,23 +10,23 @@ struct P_IN
 	float3 WorldPos : TEXCOORD1;
 };
 
-//cbuffer LightBuffer1 : register(b0)
-//{
-//	float4 ambientDiffuse;
-//
-//	float4 directionDiffuse;
-//	float3 lightDirection;
-//	float pointRadius;
-//
-//	float4 pointDiffuse;
-//	float4 pointPosition;
-//
-//	float4 spotDiffuse;
-//	float4 spotPosition;
-//	float4 spotDirection;
-//	float spotRatio;
-//	float3 padding;
-//};
+cbuffer LightBuffer1 : register(b0)
+{
+	float4 ambientDiffuse;
+
+	//float4 directionDiffuse;
+	//float3 lightDirection;
+	//float pointRadius;
+
+	//float4 pointDiffuse;
+	//float4 pointPosition;
+
+	float4 spotDiffuse;
+	float4 spotPosition;
+	float4 spotDirection;
+	float spotRatio;
+	float3 padding;
+};
 
 //cbuffer LightBuffer2 : register(b1)
 //{
@@ -53,7 +53,7 @@ float4 main(P_IN input) : SV_TARGET
 	float4 textureColor = baseTexture.Sample(filters[0], input.uv);
 
 	//Ambient Light
-	//float4 ambientResult = ambientDiffuse2*textureColor;
+	float4 ambientResult = ambientDiffuse*textureColor;
 
 	////Directional Light
 	//float directionalRatio = saturate(dot(-lightDirection, input.normal));
@@ -65,16 +65,16 @@ float4 main(P_IN input) : SV_TARGET
 	//	float pointRatio = saturate(dot(pointDir, input.normal));
 	//float4 pointResult = pointAttenuation*pointRatio*pointDiffuse*textureColor;
 
-	//	//Spotlight
-	//	float3 spotDir = normalize(spotPosition.xyz - input.WorldPos.xyz);
-	//	float surfaceRatio = saturate(dot(-spotDir, spotDirection));
-	//float4 spotAttenuation = 1.0 - saturate(length(spotPosition - input.WorldPos) / 30.0f);
-	//	float spotFactor = (surfaceRatio > spotRatio) ? 1 : 0;
-	//float finalRatio = saturate(dot(spotDir, input.normal));
-	//float4 spotResult = spotAttenuation*spotFactor*finalRatio*spotDiffuse*textureColor;
+		//Spotlight
+		float3 spotDir = normalize(spotPosition.xyz - input.WorldPos.xyz);
+		float surfaceRatio = saturate(dot(-(float3)spotDir, (float3)spotDirection));
+	float4 spotAttenuation = 1.0 - saturate(length((float3)spotPosition - (float3)input.WorldPos) / 30.0f);
+		float spotFactor = (surfaceRatio > spotRatio) ? 1 : 0;
+	float finalRatio = saturate(dot(spotDir, input.normal));
+	float4 spotResult = spotAttenuation*spotFactor*finalRatio*spotDiffuse*textureColor;
 
 		//return directionResult + pointResult + spotResult;
-	return textureColor;
-			//* saturate(ambientResult + directionResult + spotResult + pointResult)
+	return textureColor * saturate(ambientResult + spotResult);
+		//return textureColor * saturate(ambientResult + directionResult + spotResult + pointResult)
 	//return textureColor;
 }

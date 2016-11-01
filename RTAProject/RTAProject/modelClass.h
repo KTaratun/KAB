@@ -1,5 +1,5 @@
 #pragma once
-#pragma pack_matrix( row_major )
+//#pragma pack_matrix( row_major )
 
 #include <d3d11.h>
 #include <DirectXMath.h>

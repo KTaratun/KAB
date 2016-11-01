@@ -68,9 +68,9 @@ void CubeModel::Initialize(ID3D11Device* device)
 
 	XMFLOAT4X4 ScaleMatrix =
 	{
-		25, 0, 0, 0,
-		0, 0.05f, 0, 0,
-		0, 0, 25, 0,
+		1, 0, 0, 0,
+		0, 1, 0, 0,
+		0, 0, 1, 0,
 		0, 0, 0, 1
 	};
 	XMFLOAT4X4 TranslateMatrix =
@@ -94,7 +94,6 @@ void CubeModel::Render(ID3D11DeviceContext* deviceContext, float delta)
 	//indexBuffer = NULL;
 	//worldMatrix.objectMatrix = MatrixMultiply_4x4(worldMatrix.objectMatrix, Rotate_X4x4(delta*5.0f));
 
-
 	D3D11_MAPPED_SUBRESOURCE mapRes;
 	deviceContext->Map(constantBuffer, NULL, D3D11_MAP_WRITE_DISCARD, NULL, &mapRes);
 	memcpy(mapRes.pData, &worldMatrix, sizeof(SEND_TO_OBJECT));
@@ -105,8 +104,6 @@ void CubeModel::Render(ID3D11DeviceContext* deviceContext, float delta)
 	UINT stride = sizeof(OBJ_VERT);
 	UINT offset = 0;
 	deviceContext->IASetVertexBuffers(0, 1, &vertexBuffer, &stride, &offset);
-
-
 
 	deviceContext->PSSetShaderResources(0, 1, &shaderResourceView);
 	deviceContext->PSSetSamplers(0, 1, &samplerState);

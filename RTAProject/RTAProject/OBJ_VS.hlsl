@@ -41,7 +41,7 @@ V_OUT main( V_IN input )
 	output.normalOut = normalize(output.normalOut);
 
 	//output.normalOut = input.normalIn;
-	output.WorldPos = posWorld;
+	output.WorldPos = float3(posWorld.x, posWorld.y, posWorld.z);
 
 	return output;
 }
