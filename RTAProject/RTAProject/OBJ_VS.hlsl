@@ -40,8 +40,8 @@ V_OUT main( V_IN input )
 	output.normalOut = mul(input.normalIn, (float3x3)worldMatrix);
 	output.normalOut = normalize(output.normalOut);
 
-	//output.normalOut = input.normalIn;6
-	output.WorldPos = posWorld;
+	//output.normalOut = input.normalIn;
+	output.WorldPos = float3(posWorld.x, posWorld.y, posWorld.z);
 
 	return output;
 }

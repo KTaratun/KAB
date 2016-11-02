@@ -75,7 +75,6 @@ bool ModelClass::loadOBJ(const char* _path, vector<OBJ_VERT>& out_vertices, vect
 			normIndices.push_back(normIndex[0]);
 			normIndices.push_back(normIndex[1]);
 			normIndices.push_back(normIndex[2]);
-
 		}
 	}
 
