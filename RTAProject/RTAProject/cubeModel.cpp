@@ -68,9 +68,9 @@ void CubeModel::Initialize(ID3D11Device* device)
 
 	XMFLOAT4X4 ScaleMatrix =
 	{
-		25, 0, 0, 0,
-		0, 0.05f, 0, 0,
-		0, 0, 25, 0,
+		1, 0, 0, 0,
+		0, 1, 0, 0,
+		0, 0, 1, 0,
 		0, 0, 0, 1
 	};
 	XMFLOAT4X4 TranslateMatrix =
