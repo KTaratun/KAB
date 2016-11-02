@@ -136,8 +136,8 @@ void Sample3DSceneRenderer::CreateWindowSizeDependentResources()
 	viewports[1].TopLeftX = outputSize.Width / 2 - 5;
 	viewports[1].TopLeftY = outputSize.Height / 2 - 5;
 
-	textureDesc.Width = viewports[1].Width;
-	textureDesc.Height = viewports[1].Height;
+	textureDesc.Width = (UINT)viewports[1].Width;
+	textureDesc.Height = (UINT)viewports[1].Height;
 	textureDesc.MipLevels = 1;
 	textureDesc.ArraySize = 1;
 	textureDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
@@ -234,26 +234,26 @@ void Sample3DSceneRenderer::Update(DX::StepTimer const& timer)
 
 	if (buttons['W'])
 	{
-		newcamera.r[3] = newcamera.r[3] + newcamera.r[2] * +timer.GetElapsedSeconds() * 5.0;
-		newship.r[3] = newship.r[3] + newship.r[2] * +timer.GetElapsedSeconds() * 5.0;
+		newcamera.r[3] = newcamera.r[3] + newcamera.r[2] * +(float)timer.GetElapsedSeconds() * 5.0f;
+		newship.r[3] = newship.r[3] + newship.r[2] * +(float)timer.GetElapsedSeconds() * 5.0f;
 	}
 
 	if (buttons['A'])
 	{
-		newcamera.r[3] = newcamera.r[3] + newcamera.r[0] * -timer.GetElapsedSeconds() *5.0;
-		newship.r[3] = newship.r[3] + newship.r[0] * -timer.GetElapsedSeconds() *5.0;
+		newcamera.r[3] = newcamera.r[3] + newcamera.r[0] * -(float)timer.GetElapsedSeconds() *5.0f;
+		newship.r[3] = newship.r[3] + newship.r[0] * -(float)timer.GetElapsedSeconds() *5.0f;
 	}
 
 	if (buttons['S'])
 	{
-		newcamera.r[3] = newcamera.r[3] + newcamera.r[2] * -timer.GetElapsedSeconds() * 5.0;
-		newship.r[3] = newship.r[3] + newship.r[2] * -timer.GetElapsedSeconds() * 5.0;
+		newcamera.r[3] = newcamera.r[3] + newcamera.r[2] * -(float)timer.GetElapsedSeconds() * 5.0f;
+		newship.r[3] = newship.r[3] + newship.r[2] * -(float)timer.GetElapsedSeconds() * 5.0f;
 	}
 
 	if (buttons['D'])
 	{
-		newcamera.r[3] = newcamera.r[3] + newcamera.r[0] * timer.GetElapsedSeconds() * 5.0;
-		newship.r[3] = newship.r[3] + newship.r[0] * timer.GetElapsedSeconds() * 5.0;
+		newcamera.r[3] = newcamera.r[3] + newcamera.r[0] * (float)timer.GetElapsedSeconds() * 5.0f;
+		newship.r[3] = newship.r[3] + newship.r[0] * (float)timer.GetElapsedSeconds() * 5.0f;
 	}
 	if (buttons['J'])
 	{
@@ -271,14 +271,23 @@ void Sample3DSceneRenderer::Update(DX::StepTimer const& timer)
 	{
 		m_constantlightbufferdata.light_dir.z+= 0.1f;
 	}
-
+	XMMATRIX sunMat = XMLoadFloat4x4(&w_sun);
 	if (buttons['R'])
 	{
+		//m_constantlightbufferdata.light_pos.y += 0.1f;
 		XMStoreFloat4(&m_constantlightbufferdata.light_pos, XMLoadFloat4(&XMFLOAT4(0.0f, m_constantlightbufferdata.light_pos.y += 0.1f, 0.0f, 1.0f)));
+		sunMat.r[3] += {0, 0.1f, 0, 0};
+		XMStoreFloat4x4(&w_sun, sunMat);
+		//XMMATRIX sunMat = XMLoadFloat4x4(&w_sun);
+		//XMVECTOR sunPos = XMLoadFloat4(&m_constantlightbufferdata.light_pos);
+		//sunMat.r[3] = sunPos;
+		//XMStoreFloat4x4(&w_sun, sunMat);
 	}
 	if (buttons['F'])
 	{
 		XMStoreFloat4(&m_constantlightbufferdata.light_pos, XMLoadFloat4(&XMFLOAT4(0.0f, m_constantlightbufferdata.light_pos.y -= 0.1f, 0.0f, 1.0f)));
+		sunMat.r[3] += {0, -0.1f, 0, 0};
+		XMStoreFloat4x4(&w_sun, sunMat);
 
 	}
 	if (mouse_move)
@@ -322,7 +331,7 @@ void Sample3DSceneRenderer::Rotate(float radians)
 	XMStoreFloat4x4(&w_asteroid, XMMatrixTranspose(orbit));
 	//sun
 	orbit.r[3] = XMLoadFloat4(&XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f));
-	XMStoreFloat4x4(&w_sun, XMMatrixTranspose(orbit));
+	//XMStoreFloat4x4(&w_sun, XMMatrixTranspose(orbit));
 	//mercury
 
 	orbit.r[3] = XMLoadFloat4(&XMFLOAT4(4.0f, 0.0f, 0.0f, 1.0f));
@@ -401,7 +410,7 @@ void Sample3DSceneRenderer::RenderToViewPort(int vp)
 	UINT stride = sizeof(VertexPositionColor);
 	UINT offset = 0;
 #pragma region skybox
-	/*
+	
 	m_deviceResources->GetD3DDeviceContext()->RSSetState(back_raster_state.Get());
 	//set viewport
 	// Prepare the constant buffer to send it to the graphics device.
@@ -490,7 +499,7 @@ void Sample3DSceneRenderer::RenderToViewPort(int vp)
 	);
 	m_deviceResources->GetD3DDeviceContext()->RSSetState(front_raster_state.Get());
 	context->ClearDepthStencilView(m_deviceResources->GetDepthStencilView(), D3D11_CLEAR_DEPTH, 1.0f, 0);
-	*/
+	
 #pragma endregion
 
 #pragma region ship
@@ -687,7 +696,10 @@ void Sample3DSceneRenderer::RenderToViewPort(int vp)
 	*/
 
 #pragma region planets
+
+
 	model.position = w_sun;
+
 	context->UpdateSubresource1(
 		m_modelConstBuffer.Get(),
 		0,
@@ -712,7 +724,7 @@ void Sample3DSceneRenderer::RenderToViewPort(int vp)
 		DXGI_FORMAT_R32_UINT,
 		0
 	);
-	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
 	context->IASetInputLayout(m_inputLayout.Get());
 	// Attach our vertex shader.
 	context->VSSetShader(
@@ -760,6 +772,9 @@ void Sample3DSceneRenderer::RenderToViewPort(int vp)
 		0,
 		0
 	);
+
+	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
 	model.position = w_mercury;
 	context->PSSetShaderResources(1, 1, mercuryTex.GetAddressOf());
 	context->UpdateSubresource1(
@@ -973,7 +988,7 @@ void Sample3DSceneRenderer::RenderToViewPort(int vp)
 #pragma endregion
 
 #pragma region geomitry render
-	/*
+	
 	model.position = w_geomitry;
 	context->UpdateSubresource1(
 		m_geomitryConstBuffer.Get(),
@@ -1051,7 +1066,7 @@ void Sample3DSceneRenderer::RenderToViewPort(int vp)
 		nullptr,
 		0
 	);
-	*/
+	
 #pragma endregion
 }
 
