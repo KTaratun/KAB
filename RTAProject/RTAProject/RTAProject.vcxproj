@@ -155,7 +155,6 @@
     </FxCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\AnimationStub\AnimationStub\FBXLoader.cpp" />
     <ClCompile Include="cubeModel.cpp" />
     <ClCompile Include="DDSTextureLoader.cpp" />
     <ClCompile Include="main.cpp" />
@@ -163,7 +162,6 @@
     <ClCompile Include="xTime.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\AnimationStub\AnimationStub\FBXLoader.h" />
     <ClInclude Include="cubeModel.h" />
     <ClInclude Include="DDSTextureLoader.h" />
     <ClInclude Include="modelClass.h" />
