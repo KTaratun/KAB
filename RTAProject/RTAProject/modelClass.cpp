@@ -21,7 +21,8 @@ bool ModelClass::loadOBJ(const char* _path, vector<OBJ_VERT>& out_vertices, vect
 	vector<XMFLOAT3> temp_verts;
 	vector<XMFLOAT2> temp_uvs;
 	vector<XMFLOAT3> temp_norms;
-	FILE * file = fopen(_path, "r");
+	FILE * file;
+	fopen_s(&file, _path, "r");
 
 	if (file == NULL)
 	{
@@ -32,33 +33,33 @@ bool ModelClass::loadOBJ(const char* _path, vector<OBJ_VERT>& out_vertices, vect
 	while (1){
 		char lineHead[128];
 
-		int res= fscanf(file, "%s", lineHead);
+		int res = fscanf_s(file, "%s", &lineHead, (unsigned int)sizeof(lineHead));
 		if (res == EOF)
 			break;
 
 		if (strcmp(lineHead, "v") == 0)
 		{
 			XMFLOAT3 vert;
-			fscanf(file, "%f %f %f\n", &vert.x, &vert.y, &vert.z);
+			fscanf_s(file, "%f %f %f\n", &vert.x, &vert.y, &vert.z);
 			temp_verts.push_back(vert);
 		}
 		else if (strcmp(lineHead, "vt") == 0)
 		{
 			XMFLOAT2 uv;
-			fscanf(file, "%f %f\n", &uv.x, &uv.y);
+			fscanf_s(file, "%f %f\n", &uv.x, &uv.y);
 			temp_uvs.push_back(uv);
 		}
 		else if (strcmp(lineHead, "vn") == 0)
 		{
 			XMFLOAT3 norm;
-			fscanf(file, "%f %f %f\n", &norm.x, &norm.y, &norm.z);
+			fscanf_s(file, "%f %f %f\n", &norm.x, &norm.y, &norm.z);
 			temp_norms.push_back(norm);
 		}
 		else if (strcmp(lineHead, "f") == 0)
 		{
 			string vert1, vert2, vert3;
 			UINT vertIndex[3], uvIndex[3], normIndex[3];
-			int matches = fscanf(file, "%d/%d/%d %d/%d/%d %d/%d/%d\n", &vertIndex[0], &uvIndex[0], &normIndex[0], &vertIndex[1], &uvIndex[1], &normIndex[1], &vertIndex[2], &uvIndex[2], &normIndex[2]);
+			int matches = fscanf_s(file, "%d/%d/%d %d/%d/%d %d/%d/%d\n", &vertIndex[0], &uvIndex[0], &normIndex[0], &vertIndex[1], &uvIndex[1], &normIndex[1], &vertIndex[2], &uvIndex[2], &normIndex[2]);
 			if (matches != 9)
 			{
 				printf("File can't be read. Try exporting with other options\n");

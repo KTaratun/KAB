@@ -6,6 +6,7 @@
 #include "DDSTextureLoader.h"
 #pragma comment(lib,"d3d11.lib")
 #include <vector>
+#include <stdio.h>
 using namespace DirectX;
 using namespace std;
 #define RELEASE_COM(x) {if (x){x->Release();x = nullptr;}}
