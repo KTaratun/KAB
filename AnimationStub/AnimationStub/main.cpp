@@ -1,12 +1,10 @@
+#include "stdafx.h"
 #include <Windows.h>
 #include <ctime>
-//#include <iostream>
-//#include <d3d11.h>
-//#pragma comment(lib,"d3d11.lib")
-//#include <DirectXMath.h>
+
 #include "cubeModel.h"
-//#include "../FBXExporter/FBXLoader.h"
-//#pragma comment(lib, "FBXExporter.lib")
+#include "boxBind.h"
+#include "FBXLoader.h"
 
 #include <cmath>
 #include "xTime.h"
@@ -37,10 +35,6 @@ class APP
 		float ratio_spotLight;
 		XMFLOAT3 padding;
 	};
-
-	//std::vector<Mesh> meshes;
-	//std::vector<TransformNode> transformHierarchy;
-	//Animation animation;
 
 	HINSTANCE	h_application;
 	WNDPROC		appWndProc;
@@ -78,6 +72,7 @@ class APP
 	XTime xTime;
 
 	CubeModel* Cube;
+	MeshClass* box;
 
 	int moveSpeed;
 	bool mouseMove;
@@ -293,6 +288,9 @@ APP::APP(HINSTANCE hinst, WNDPROC proc)
 	Cube = new CubeModel();
 	Cube->Initialize(p_device);
 
+	box = new MeshClass();
+	box->Initialize(p_device);
+
 	mouseMove = false;
 
 	p_application = this;
@@ -459,6 +457,7 @@ bool APP::Run()
 	XMStoreFloat4x4(&scene_matrix.m4x4_view, viewMat);
 
 	Cube->Render(p_context, (float)xTime.Delta());
+	box->Render(p_context, (float)xTime.Delta());
 
 	p_swapchain->Present(0, 0);
 	return true;
@@ -469,6 +468,9 @@ bool APP::ShutDown()
 {
 	Cube->Shutdown();
 	delete Cube;
+
+	box->Shutdown();
+	delete box;
 
 	p_swapchain->Release();
 	p_RTV->Release();

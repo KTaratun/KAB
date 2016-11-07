@@ -114,7 +114,7 @@ namespace FBXLoader
 	// End Forward declaration of internal methods used by FBXLoader::Load method
 	////////////////////////////////////////////////////////////////////////////
 
-	bool Load(const std::string &fileName,
+	static bool Load(const std::string &fileName,
 		// [out] Test nmodels provided will only have one mesh, but other assets may have multiple
 		// meshes using the same rig to create a model
 		std::vector<Mesh > &meshes,
