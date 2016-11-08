@@ -28,7 +28,7 @@ void MeshClass::Initialize(ID3D11Device* device)
 	indexBufferDesc.Usage = D3D11_USAGE_IMMUTABLE;
 	indexBufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
 	indexBufferDesc.CPUAccessFlags = NULL;
-	indexBufferDesc.ByteWidth = sizeof(UINT) * 84;
+	indexBufferDesc.ByteWidth = sizeof(UINT) * control_point_indices.size();
 	indexBufferDesc.MiscFlags = 0;
 
 	D3D11_SUBRESOURCE_DATA initialData;
@@ -44,7 +44,7 @@ void MeshClass::Initialize(ID3D11Device* device)
 	vertexBufferDesc.Usage = D3D11_USAGE_IMMUTABLE;
 	vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 	vertexBufferDesc.CPUAccessFlags = NULL;
-	vertexBufferDesc.ByteWidth = sizeof(Vertex) * 16;
+	vertexBufferDesc.ByteWidth = sizeof(Vertex) * meshes[0].verts.size();
 	vertexBufferDesc.MiscFlags = 0;
 
 	D3D11_SUBRESOURCE_DATA initialDataVertex;
@@ -91,18 +91,16 @@ void MeshClass::Initialize(ID3D11Device* device)
 
 	XMFLOAT4X4 ScaleMatrix =
 	{
-		1, 0, 0, 0,
-		0, 1, 0, 0,
-		0, 0, 1, 0,
-		0, 0, 0, 1
+		0.000025f, 0, 0, 0,
+		0, 0.000025f, 0, 0,
+		0, 0, 0.000025f, 0,
+		0, 0, 0, 0.000025f
 	};
 	XMFLOAT4X4 TranslateMatrix =
-	{
-		1, 0, 0, 0,
+	{ 1, 0, 0, 0,
 		0, 1, 0, 0,
 		0, 0, 1, 0,
-		0, 0, 0, 1
-	};
+		0, -1, 0, 1 };
 
 	XMMATRIX scaleMat = XMLoadFloat4x4(&ScaleMatrix);
 	XMMATRIX translateMat = XMLoadFloat4x4(&TranslateMatrix);
@@ -152,7 +150,7 @@ void MeshClass::Render(ID3D11DeviceContext* deviceContext, float delta)
 	deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	deviceContext->IASetIndexBuffer(indexBuffer, DXGI_FORMAT_R32_UINT, 0);
 
-	deviceContext->DrawIndexed(control_point_indices.size(), 0, 0);
+	deviceContext->Draw(meshes[0].verts.size(), 0);
 
 
 
