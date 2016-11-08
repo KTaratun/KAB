@@ -237,7 +237,7 @@ namespace FBXLoader
 		// hierarchy, you may only need the root instead of a list of all nodes.
 		std::vector<TransformNode> &transformHierarchy,
 		// [out] The loaded animation
-		Animation &animation, std::vector< unsigned int > &_control_point_indices)
+		Animation &animation)
 	{
 		// Get an FBX manager
 		FbxManager* manager = FbxManager::Create();
@@ -349,7 +349,7 @@ namespace FBXLoader
 			}
 
 			meshes.push_back(mesh);
-			_control_point_indices = control_point_indices;
+			//_control_point_indices = control_point_indices;
 
 			//std::vector<Vertex> verts;
 			//std::vector<unsigned int> ctrl;
@@ -526,10 +526,12 @@ namespace FBXLoader
 
 		int vertexCounter = 0;
 		int polyCount = fbx_mesh->GetPolygonCount();
-
+		
 		for (size_t polyIndex = 0; polyIndex < polyCount; polyIndex++)
 		{
-			for (size_t vertIndex = 0;  vertIndex < fbx_mesh->GetPolygonSize(polyIndex);  vertIndex++)
+			int vertCount = fbx_mesh->GetPolygonSize(polyIndex);
+
+			for (size_t vertIndex = 0;  vertIndex < vertCount;  vertIndex++)
 			{
 
 				int ctrlPointIndex = fbx_mesh->GetPolygonVertex(polyIndex, vertIndex);
@@ -568,20 +570,22 @@ namespace FBXLoader
 				vert.normals[2] = (float)normals.mData[2];
 
 				//control_point_indices.push_back(ctrlPointIndex);
-				bool found = false;
+				mesh.verts.push_back(vert);
 
-				for (size_t i = 0; i < mesh.verts.size(); i++)
-					if (mesh.verts[i].xyz[0] == vert.xyz[0] && mesh.verts[i].xyz[1] == vert.xyz[1] && mesh.verts[i].xyz[2] == vert.xyz[2])
-					{
-						found = true;
-						control_point_indices.push_back(i);
-					}
-				
-				if (found == false)
-				{
-					mesh.verts.push_back(vert);
-					control_point_indices.push_back(mesh.verts.size() - 1);
-				}
+				//bool found = false;
+				//
+				//for (size_t i = 0; i < mesh.verts.size(); i++)
+				//	if (mesh.verts[i].xyz[0] == vert.xyz[0] && mesh.verts[i].xyz[1] == vert.xyz[1] && mesh.verts[i].xyz[2] == vert.xyz[2])
+				//	{
+				//		found = true;
+				//		control_point_indices.push_back(i);
+				//	}
+				//
+				//if (found == false)
+				//{
+				//	mesh.verts.push_back(vert);
+				//	control_point_indices.push_back(mesh.verts.size() - 1);
+				//}
 			}
 		}
 
