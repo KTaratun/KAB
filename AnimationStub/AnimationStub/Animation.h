@@ -1,7 +1,8 @@
 #pragma once
 #include <string>
-
+#include <vector>
 #include "KeyFrame.h"
+#include <fbxsdk.h>
 
 struct Channel
 {
@@ -20,13 +21,18 @@ public:
 	inline float GetDuration() { return duration; }
 	inline void SetDuration(float _duration) { duration = _duration; }
 
-	inline const std::string &GetName() const { return animName; }
-	inline void SetName(const std::string &name) { animName = name; }
+	inline const FbxString &GetName() const { return animName; }
+	inline void SetName(const FbxString &name) { animName = name; }
+
+	//KeyFrame* keyFrames[42];
+	std::vector<KeyFrame*> keyFrames;
 private:
-	std::string animName;
-	
+	FbxString animName;
+
 	// The total length of the animation
 	float duration;
+
+	//static const int NUMBER_OF_KEYS_FOR_THIS_JOINT = 42;
 
 	// The representation of the animation at a certain point in time
 	//KeyFrame keyFrames[NUMBER_OF_KEYS_IN_ANIMATION];

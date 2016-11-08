@@ -35,10 +35,3 @@ void TransformNode::AddChild(TransformNode* child)
 {
 	children.push_back(child);
 }
-
-KeyFrame** TransformNode::GetAnimation()
-{
-	return animation;
-}
-
-//void TransformNode::SetAnimation()

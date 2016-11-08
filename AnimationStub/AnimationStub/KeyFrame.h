@@ -1,6 +1,10 @@
 #pragma once
 
 #include <fbxsdk.h>
+#include <vector>
+#include <DirectXMath.h>
+
+using namespace DirectX;
 class KeyFrame
 {
 public:
@@ -11,15 +15,19 @@ public:
 	void SetKeyFrameNum(int num);
 	FbxAMatrix GetGlobalTransform();
 	void SetGlobalTransform(FbxAMatrix mat);
-	KeyFrame** KeyFrame::GetNext();
-	void KeyFrame::SetNext(KeyFrame** _next);
+	KeyFrame* KeyFrame::GetNext();
+	void KeyFrame::SetNext(KeyFrame* _next);
+	void KeyFrame::SetKeyTime(FbxTime time);
+	FbxTime KeyFrame::GetKeyTime();
+
+	std::vector<XMMATRIX> bones;
 
 private:
 	// When in the animation does this KeyFrame happen?
-	float keyTime;
+	FbxTime keyTime;
 	float keyFrameNum;
 	FbxAMatrix globalTransform;
-	KeyFrame** next;
+	KeyFrame* next;
 
 	// The representation of the animated "skeleton" (All joints) at the keyTime
 	// TransformNode joints[NumJointsInRig];

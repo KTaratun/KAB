@@ -31,12 +31,22 @@ void KeyFrame::SetGlobalTransform(FbxAMatrix mat)
 	globalTransform = mat;
 }
 
-KeyFrame** KeyFrame::GetNext()
+KeyFrame* KeyFrame::GetNext()
 {
 	return next;
 }
 
-void KeyFrame::SetNext(KeyFrame** _next)
+void KeyFrame::SetNext(KeyFrame* _next)
 {
 	next = _next;
+}
+
+void KeyFrame::SetKeyTime(FbxTime time)
+{
+	keyTime = time;
+}
+
+FbxTime KeyFrame::GetKeyTime()
+{
+	return keyTime;
 }
