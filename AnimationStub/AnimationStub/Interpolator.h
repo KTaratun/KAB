@@ -1,5 +1,6 @@
 #pragma once
 #include "Animation.h"
+#include <fbxsdk.h>
 
 class Interpolator
 {
@@ -9,12 +10,16 @@ public:
 
 	inline void AddTime(float timeToAdd) { currentTime += timeToAdd; }
 	inline void SetTime(float _currentTime) { currentTime = _currentTime; }
+	inline void SetAnimPtr(Animation *aP) { animPtr = aP; }
+	KeyFrame Interpolate(KeyFrame* current, KeyFrame* next, float delta);
 
 	// Creates the "betweenKeyFrame" data based on the animation and currentTime elements
-	void Process();
+	void Process(float time);
 
 private:
 	float currentTime;
+
+	KeyFrame* currentFrame;
 
 	// The animation this interpolator is interpolating
 	Animation *animPtr;

@@ -3,8 +3,11 @@
 #include <string>
 #include <fbxsdk.h>
 #include "KeyFrame.h"
+#include <directXMath.h>
 using std::vector;
 using std::string;
+
+using namespace DirectX;
 
 // Defines a node instance for a transformation in a hierarchy
 // There are a variety of means by which we could define a transorm.
@@ -24,7 +27,7 @@ using std::string;
 // animation" presentation in the course materials folder.
 
 // Erase this once you have defined "Transform" or changed it to what you will use
-#define Transform FbxAMatrix
+#define Transform XMMATRIX
 
 class TransformNode
 {
@@ -32,7 +35,7 @@ public:
 	TransformNode();
 	~TransformNode();
 
-	inline const Transform &GetLocal()	{ return local;	}
+	inline const Transform &GetLocal() { return local; }
 	inline const string &GetName() { return name; }
 	inline void SetName(const string &_name) { name = _name; }
 
@@ -41,7 +44,6 @@ public:
 	void SetLocal(const Transform &_local);
 	void SetParent(TransformNode* ptr);
 	void AddChild(TransformNode* ptr);
-	KeyFrame** TransformNode::GetAnimation();
 
 private:
 	// The world space transformation for this object. 
@@ -56,10 +58,8 @@ private:
 	// This nodes collection of children. Leaf nodes will not have children.
 	vector<TransformNode *>children;
 
-	KeyFrame **animation;
-
 	// If true, the world transform will need to be recalculated, 
-    //else world is currently correct
+	//else world is currently correct
 	bool bDirty;
 
 	void MakeDirty()

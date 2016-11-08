@@ -1,5 +1,6 @@
 #pragma once
 #include <vector>
+#include <fbxsdk.h>
 
 // Store needed mesh data here.
 struct Vertex
@@ -37,9 +38,18 @@ struct CtrlPoint
 
 class Mesh
 {
-	
+
 public:
 	Mesh();
 	~Mesh();
 	std::vector<Vertex> verts;
+};
+
+struct BinaryHeader
+{
+	int file_size;
+	int vector_size;
+	int CtrlPointIndicies_size;
+	int fileversion;
+	FbxLocalTime timestamp;
 };
