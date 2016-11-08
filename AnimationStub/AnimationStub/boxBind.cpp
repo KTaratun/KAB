@@ -5,12 +5,11 @@ void MeshClass::Initialize(ID3D11Device* device)
 {
 	FBXLoader::Load("Box_BindPose.fbx", meshes, transformHierarchy, animation, control_point_indices);
 
-
-	std::vector<FbxAMatrix> boneMatrices;
-	for (UINT i = 0; i < transformHierarchy.size(); i++)
-	{
-		boneMatrices.push_back(transformHierarchy[i].GetLocal());
-	}
+	//std::vector<FbxAMatrix> boneMatrices;
+	//for (UINT i = 0; i < transformHierarchy.size(); i++)
+	//{
+	//	boneMatrices.push_back(transformHierarchy[i].GetLocal());
+	//}
 
 	XMFLOAT4X4 IdentityMatrix =
 	{
