@@ -127,5 +127,7 @@
     <FxCompile Include="OBJ_VS.hlsl" />
     <FxCompile Include="FBX_VS.hlsl" />
     <FxCompile Include="FBX_PS.hlsl" />
+    <FxCompile Include="Bone_VS.hlsl" />
+    <FxCompile Include="Bone_PS.hlsl" />
   </ItemGroup>
 </Project>

@@ -8,10 +8,24 @@
 #include <stdio.h>
 #include "FBX_VS.csh"
 #include "FBX_PS.csh"
+#include "Bone_VS.csh"
+#include "Bone_PS.csh"
+#include "modelClass.h"
 
 using namespace DirectX;
 using namespace std;
 #define RELEASE_COM(x) {if (x){x->Release();x = nullptr;}}
+
+class BoneSphere : public ModelClass
+{
+public:
+	BoneSphere() {};
+	~BoneSphere() {};
+
+	void Initialize(ID3D11Device* device, FbxAMatrix matrix);
+	void Render(ID3D11DeviceContext* deviceContext, float delta);
+	void Shutdown();
+};
 
 class MeshClass
 {
@@ -19,6 +33,7 @@ class MeshClass
 	std::vector<TransformNode> transformHierarchy;
 	Animation animation;
 	std::vector< unsigned int > control_point_indices;
+	std::vector<BoneSphere*> boneSpheres;
 protected:
 	UINT indexCount = 0;
 	UINT vertexCount = 0;

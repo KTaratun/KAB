@@ -1,17 +1,13 @@
 struct V_IN
 {
 	float3 positionIn : POSITION;
-	float3 uvIn : UVW;
+	float2 uvIn : UV;
 	float3 normalIn : NORMALS;
-	float3 binormalIn : BINORMALS;
-	float3 tangentIn : TANGENTS;
-	int4 boneIn : BONE;
-	float4 weightIn : WEIGHT;
 };
 
 struct V_OUT
 {
-	float3 uvOut : TEXCOORD;
+	float2 uvOut : TEXCOORD;
 	float3 normalOut : NORMALS;
 	float4 positionOut : SV_POSITION;
 	float3 WorldPos : TEXCOORD1;

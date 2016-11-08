@@ -4,7 +4,7 @@ SamplerState filters[2] : register(s0);
 
 struct P_IN
 {
-	float3 uv : TEXCOORD;
+	float2 uv : TEXCOORD;
 	float3 normal : NORMALS;
 	float4 position : SV_POSITION;
 	float3 WorldPos : TEXCOORD1;

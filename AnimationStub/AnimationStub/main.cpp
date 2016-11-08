@@ -135,7 +135,7 @@ APP::APP(HINSTANCE hinst, WNDPROC proc)
 	scene_matrix.m4x4_view.m[3][2] = -2.0f;
 
 	XMMATRIX projMat = XMLoadFloat4x4(&scene_matrix.m4x4_projection);
-	projMat = XMMatrixPerspectiveFovLH(65, BUFFER_HEIGHT / BUFFER_WIDTH, 0.1f, 500);
+	projMat = XMMatrixPerspectiveFovLH(70, BUFFER_HEIGHT / BUFFER_WIDTH, 0.1f, 500);
 	XMStoreFloat4x4(&scene_matrix.m4x4_projection, projMat);
 
 	m4x4_camera = { 1,0,0,0,
