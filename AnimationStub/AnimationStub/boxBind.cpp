@@ -23,7 +23,7 @@ void MeshClass::Initialize(ID3D11Device* device)
 
 	HRESULT hr;
 
-	D3D11_BUFFER_DESC indexBufferDesc;
+	/*D3D11_BUFFER_DESC indexBufferDesc;
 	ZeroMemory(&indexBufferDesc, sizeof(indexBufferDesc));
 	indexBufferDesc.Usage = D3D11_USAGE_IMMUTABLE;
 	indexBufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
@@ -37,7 +37,7 @@ void MeshClass::Initialize(ID3D11Device* device)
 	initialData.SysMemPitch = 0;
 	initialData.SysMemSlicePitch = 0;
 
-	hr = device->CreateBuffer(&indexBufferDesc, &initialData, &indexBuffer);
+	hr = device->CreateBuffer(&indexBufferDesc, &initialData, &indexBuffer);*/
 
 	D3D11_BUFFER_DESC vertexBufferDesc;
 	ZeroMemory(&vertexBufferDesc, sizeof(vertexBufferDesc));

@@ -112,7 +112,7 @@ namespace FBXLoader
 	static void KeyReduction(Animation &animation);
 
 	
-	bool BinaryOut(std::vector<Vertex>&inVertexVector, std::vector< unsigned int > CtrlPointIndicies, FbxIOFileHeaderInfo& fileheader, const char* _Filename)
+	bool BinaryOut(std::vector<Vertex>&inVertexVector, FbxIOFileHeaderInfo& fileheader, const char* _Filename)
 	{
 		std::string filename = std::string(_Filename);
 
@@ -139,7 +139,6 @@ namespace FBXLoader
 			// initialize header
 			header.file_size = (inVertexVector.size() * sizeof(Vertex));
 			header.vector_size = inVertexVector.size();
-			//header.CtrlPointIndicies_size = CtrlPointIndicies.size() * sizeof(unsigned int);
 
 			if (fileheader.mFileVersion > 0)
 				header.fileversion = fileheader.mFileVersion;
@@ -156,9 +155,17 @@ namespace FBXLoader
 
 			binaryStream.write((const char*)&inVertexVector[0], header.vector_size);
 
-			//binaryStream.write((const char*)&CtrlPointIndicies[0], header.CtrlPointIndicies_size);
-
 			binaryStream.close();
+
+
+			FILE* file = nullptr;
+			
+			fopen_s(&file, filename.c_str(), "wb");
+			
+			fwrite(&header, sizeof(BinaryHeader), 1, file);
+			fwrite(&inVertexVector[0], sizeof(Vertex), inVertexVector.size(), file);
+			fclose(file);
+			
 		}
 		else
 			return false;
@@ -167,7 +174,7 @@ namespace FBXLoader
 	}
 
 
-	bool BinaryIn(std::vector<Vertex>&outVertexVector, std::vector< unsigned int > CtrlPointIndicies, FbxIOFileHeaderInfo& fileheader, const char* _Filename)
+	bool BinaryIn(std::vector<Vertex>&outVertexVector, FbxIOFileHeaderInfo& fileheader, const char* _Filename)
 	{
 		std::string filename = std::string(_Filename);
 		//filename += ".bin";
@@ -218,6 +225,27 @@ namespace FBXLoader
 			//binaryStream.read((char*)&CtrlPointIndicies[0], header.CtrlPointIndicies_size);
 
 			binaryStream.close();
+
+
+			std::vector<BYTE> bytes;
+			bytes.resize(header.file_size);
+
+			binaryStream.read((char*)&bytes[0], header.file_size);
+			
+			Vertex* v = reinterpret_cast<Vertex*>(&bytes[0]);
+			FILE* file = nullptr;
+
+			fopen_s(&file, filename.c_str(), "rb");
+
+			fseek(file, 0, SEEK_END);
+			long size = ftell(file);
+			size -= sizeof(BinaryHeader);
+			fseek(file, 0, SEEK_SET);
+			bytes.resize(size);
+			fread(&bytes[0], sizeof(uint8_t), size, file);
+			fclose(file);
+
+			v = reinterpret_cast<Vertex*>(&bytes[0]);
 		}
 		else
 			return false;
@@ -348,13 +376,30 @@ namespace FBXLoader
 				return false;
 			}
 
-			meshes.push_back(mesh);
+			//meshes.push_back(mesh);
 			//_control_point_indices = control_point_indices;
 
-			//std::vector<Vertex> verts;
-			//std::vector<unsigned int> ctrl;
-			//BinaryOut(mesh.verts, control_point_indices, *head, fileName.c_str());
-			//BinaryIn(verts, ctrl, *head, "Box_Jump.bin");
+			std::vector<Vertex> verts;
+			std::vector<unsigned int> ctrl;
+
+			BinaryOut(mesh.verts, *head, fileName.c_str());
+
+			string f = fileName;
+			f.pop_back();
+			f.pop_back();
+			f.pop_back();
+			f.pop_back();
+			f += ".bin";
+			
+			BinaryIn(verts, *head, f.c_str());
+
+			mesh.verts.clear();
+			for (size_t i = 0; i < verts.size(); i++)
+				mesh.verts.push_back(verts[i]);
+
+			Vertex* v = &mesh.verts[92];
+			
+			meshes.push_back(mesh);
 			//int x = 20;
 		}
 
@@ -533,16 +578,15 @@ namespace FBXLoader
 
 			for (size_t vertIndex = 0;  vertIndex < vertCount;  vertIndex++)
 			{
-
 				int ctrlPointIndex = fbx_mesh->GetPolygonVertex(polyIndex, vertIndex);
-				vert.xyz[0] = CPs[ctrlPointIndex].mData[0]; // x
-				vert.xyz[1] = CPs[ctrlPointIndex].mData[1]; // y
-				vert.xyz[2] = CPs[ctrlPointIndex].mData[2]; // z
+				vert.xyz.x = CPs[ctrlPointIndex].mData[0]; // x
+				vert.xyz.y = CPs[ctrlPointIndex].mData[1]; // y
+				vert.xyz.z = CPs[ctrlPointIndex].mData[2]; // z
 
 				int uVIndex = fbx_mesh->GetTextureUVIndex(polyIndex, vertIndex);
-				vert.uvw[0] = (float)UVs->GetAt(uVIndex).mData[0]; // u
-				vert.uvw[1] = 1- (float)UVs->GetAt(uVIndex).mData[1]; // v
-				vert.uvw[2] = 0; // w
+				vert.uvw.x = (float)UVs->GetAt(uVIndex).mData[0]; // u
+				vert.uvw.y = 1- (float)UVs->GetAt(uVIndex).mData[1]; // v
+				vert.uvw.z = 0; // w
 
 				int normIndex = 0;
 
@@ -565,9 +609,9 @@ namespace FBXLoader
 				vert.bone.z = mControlPoints[vertIndex]->blendingInfo[2].blendingIndex;
 				vert.bone.w = mControlPoints[vertIndex]->blendingInfo[3].blendingIndex;
 
-				vert.normals[0] = (float)normals.mData[0];
-				vert.normals[1] = (float)normals.mData[1];
-				vert.normals[2] = (float)normals.mData[2];
+				vert.normals.x = (float)normals.mData[0];
+				vert.normals.y = (float)normals.mData[1];
+				vert.normals.z = (float)normals.mData[2];
 
 				//control_point_indices.push_back(ctrlPointIndex);
 				mesh.verts.push_back(vert);
