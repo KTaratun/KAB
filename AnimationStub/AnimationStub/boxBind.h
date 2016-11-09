@@ -22,7 +22,7 @@ public:
 	BoneSphere() {};
 	~BoneSphere() {};
 
-	void Initialize(ID3D11Device* device, FbxAMatrix matrix);
+	void Initialize(ID3D11Device* device, XMMATRIX matrix);
 	void Render(ID3D11DeviceContext* deviceContext, float delta);
 	void Shutdown();
 };

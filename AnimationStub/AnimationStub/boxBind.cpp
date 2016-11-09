@@ -3,13 +3,13 @@
 
 void MeshClass::Initialize(ID3D11Device* device)
 {
-	FBXLoader::Load("Box_BindPose.fbx", meshes, transformHierarchy, animation, control_point_indices);
+	FBXLoader::Load("Box_BindPose.fbx", meshes, transformHierarchy, animation);
 
-	//std::vector<FbxAMatrix> boneMatrices;
-	//for (UINT i = 0; i < transformHierarchy.size(); i++)
-	//{
-	//	boneMatrices.push_back(transformHierarchy[i].GetLocal());
-	//}
+	std::vector<XMMATRIX> boneMatrices;
+	for (UINT i = 0; i < transformHierarchy.size(); i++)
+	{
+		boneMatrices.push_back(transformHierarchy[i].GetLocal());
+	}
 
 	XMFLOAT4X4 IdentityMatrix =
 	{
@@ -91,10 +91,10 @@ void MeshClass::Initialize(ID3D11Device* device)
 
 	XMFLOAT4X4 ScaleMatrix =
 	{
-		0.000025f, 0, 0, 0,
-		0, 0.000025f, 0, 0,
-		0, 0, 0.000025f, 0,
-		0, 0, 0, 0.000025f
+		1, 0, 0, 0,
+		0, 1, 0, 0,
+		0, 0, 1, 0,
+		0, 0, 0, 1
 	};
 	XMFLOAT4X4 TranslateMatrix =
 	{ 1, 0, 0, 0,
@@ -110,18 +110,15 @@ void MeshClass::Initialize(ID3D11Device* device)
 	objMat = XMMatrixMultiply(scaleMat, objMat);
 
 	XMStoreFloat4x4(&worldMatrix.objectMatrix, objMat);
-	//for (UINT i = 1; i < boneMatrices.size(); i++)
-	//{
+	for (UINT i = 1; i < boneMatrices.size(); i++)
+	{
 
-	//	BoneSphere* newboneSphere = new BoneSphere();
-	//	//newboneSphere->Initialize(device, boneMatrices[i]);
-	//	boneSpheres.push_back(newboneSphere);
-	//	delete newboneSphere;
-	//}
-	//for (UINT i = 0; i < boneSpheres.size(); i++)
-	//{
-	//	boneSpheres[i]->Initialize(device, boneMatrices[i]);
-	//}
+		BoneSphere* newboneSphere = new BoneSphere();
+		newboneSphere->Initialize(device, boneMatrices[i]);
+		boneSpheres.push_back(newboneSphere);
+		delete newboneSphere;
+	}
+
 }
 
 void MeshClass::Render(ID3D11DeviceContext* deviceContext, float delta)
@@ -152,6 +149,10 @@ void MeshClass::Render(ID3D11DeviceContext* deviceContext, float delta)
 
 	deviceContext->Draw(meshes[0].verts.size(), 0);
 
+	//for (unsigned int i = 0; i < boneSpheres.size(); i++)
+	//{
+	//	boneSpheres[i]->Render(deviceContext, delta);
+	//}
 
 
 
@@ -172,7 +173,7 @@ void MeshClass::Shutdown()
 }
 
 
-void BoneSphere::Initialize(ID3D11Device* device, FbxAMatrix matrix)
+void BoneSphere::Initialize(ID3D11Device* device, XMMATRIX matrix)
 {
 	XMFLOAT4X4 IdentityMatrix =
 	{
@@ -182,15 +183,8 @@ void BoneSphere::Initialize(ID3D11Device* device, FbxAMatrix matrix)
 		0, 0, 0, 1
 	};
 
-	XMMATRIX mat;
-	for (UINT i = 0; i < 4; i++)
-	{
-		for (UINT j = 0; j < 4; j++)
-		{
-			mat.r[i].m128_f32[j] = (float)matrix.GetRow(i)[j];
-		}
-	}
-	XMStoreFloat4x4(&worldMatrix.objectMatrix, mat);
+
+	XMStoreFloat4x4(&worldMatrix.objectMatrix, matrix);
 
 
 	vector<OBJ_VERT> sphere;
