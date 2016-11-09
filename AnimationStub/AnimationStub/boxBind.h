@@ -1,6 +1,6 @@
 #pragma once
-#include "../FBXExporter/FBXLoader.h"
-#include "../FBXExporter/Interpolator.h"
+#include "FBXLoader.h"
+#include "Interpolator.h"
 #include <d3d11.h>
 #include <DirectXMath.h>
 #include "DDSTextureLoader.h"
@@ -57,8 +57,6 @@ protected:
 
 	Interpolator interp;
 
-	bool button;
-
 	struct SEND_TO_OBJECT
 	{
 		XMFLOAT4X4 objectMatrix;
@@ -72,7 +70,7 @@ public:
 	~MeshClass() {};
 
 	void Initialize(ID3D11Device* device);
-	void Render(ID3D11DeviceContext* deviceContext, ID3D11Device* device, float delta);
+	void Render(ID3D11DeviceContext* deviceContext, ID3D11DepthStencilView* p_dsView, ID3D11Device* device, float delta);
 	void Shutdown();
 	//bool loadOBJ(const char* _path, vector<OBJ_VERT>& out_vertices, vector<UINT>& out_indices);
 };

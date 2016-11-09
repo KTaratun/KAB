@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "AnimStubApp.h"
-#include "../FBXExporter/FBXLoader.h"
-#include "../FBXExporter/Interpolator.h"
+#include "FBXLoader.h"
+#include "Interpolator.h"
 
 AnimStubApp::AnimStubApp()
 {

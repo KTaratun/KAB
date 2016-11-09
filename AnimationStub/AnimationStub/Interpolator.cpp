@@ -4,7 +4,6 @@
 #pragma comment(lib, "d3d11.lib")
 #include <DirectXMath.h>
 #include <assert.h>
-#include <fbxsdk.h>
 
 using namespace DirectX;
 

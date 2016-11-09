@@ -4,7 +4,7 @@
 
 #include "cubeModel.h"
 #include "boxBind.h"
-#include "../FBXExporter/FBXLoader.h"
+#include "FBXLoader.h"
 
 #include <cmath>
 #include "xTime.h"
@@ -100,10 +100,10 @@ void APP::MouseNoMove()
 
 APP::APP(HINSTANCE hinst, WNDPROC proc)
 {
-	/*_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
-	_CrtSetReportMode(_CRT_ERROR, _CRTDBG_MODE_DEBUG);
-	_CrtSetBreakAlloc(667);*/
-	/////////// WINDOWS CODEsd
+	//_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+	//_CrtSetReportMode(_CRT_ERROR, _CRTDBG_MODE_DEBUG);
+	//_CrtSetBreakAlloc(358);
+	/////////// WINDOWS CODE
 	h_application = hinst;
 	appWndProc = proc;
 
@@ -460,7 +460,7 @@ bool APP::Run()
 	XMStoreFloat4x4(&scene_matrix.m4x4_view, viewMat);
 
 	Cube->Render(p_context, (float)xTime.Delta());
-	box->Render(p_context, p_device, (float)xTime.Delta());
+	box->Render(p_context,p_dsView, p_device, (float)xTime.Delta());
 
 	p_swapchain->Present(0, 0);
 	return true;

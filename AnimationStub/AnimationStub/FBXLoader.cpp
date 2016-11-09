@@ -3,7 +3,6 @@
 #include "KeyFrame.h"
 #include <fstream>
 #include <set>
-#include <fbxsdk.h>
 
 namespace FBXLoader
 {
