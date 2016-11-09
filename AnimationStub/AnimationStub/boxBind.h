@@ -1,5 +1,6 @@
 #pragma once
 #include "FBXLoader.h"
+#include "Interpolator.h"
 #include <d3d11.h>
 #include <DirectXMath.h>
 #include "DDSTextureLoader.h"
@@ -34,7 +35,8 @@ class MeshClass
 	Animation animation;
 	std::vector< unsigned int > control_point_indices;
 	std::vector<BoneSphere*> boneSpheres;
-	ID3D11DepthStencilView* p_dsView;
+	std::vector<XMMATRIX> boneMatrices;
+	BoneSphere* newboneSphere;
 protected:
 	UINT indexCount = 0;
 	UINT vertexCount = 0;
@@ -53,6 +55,8 @@ protected:
 	ID3D11RasterizerState* p_rsSolid;
 	ID3D11RasterizerState* p_rsWireframe;
 
+	Interpolator interp;
+
 	struct SEND_TO_OBJECT
 	{
 		XMFLOAT4X4 objectMatrix;
@@ -66,7 +70,7 @@ public:
 	~MeshClass() {};
 
 	void Initialize(ID3D11Device* device);
-	void Render(ID3D11DeviceContext* deviceContext, ID3D11DepthStencilView* p_dsView, float delta);
+	void Render(ID3D11DeviceContext* deviceContext, ID3D11DepthStencilView* p_dsView, ID3D11Device* device, float delta);
 	void Shutdown();
 	//bool loadOBJ(const char* _path, vector<OBJ_VERT>& out_vertices, vector<UINT>& out_indices);
 };

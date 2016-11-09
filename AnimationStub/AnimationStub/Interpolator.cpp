@@ -18,7 +18,7 @@ Interpolator::~Interpolator()
 {
 }
 
-void Interpolator::Process(float time) // time should be added
+KeyFrame Interpolator::Process(float time) // time should be added
 {
 	// You set the animation pointer, right?
 	assert(animPtr);
@@ -28,6 +28,11 @@ void Interpolator::Process(float time) // time should be added
 
 	// Get new time 
 	AddTime(time);
+	float finalTime = (*animPtr->keyFrames[animPtr->keyFrames.size() - 1]).GetKeyTime().GetSecondDouble();
+	if (currentTime > finalTime)
+	{
+		currentTime = 0;
+	}
 
 	float cFrameTime = (float)currentFrame->GetKeyTime().GetSecondDouble();
 	float nFrameTime = (float)currentFrame->GetNext()->GetKeyTime().GetSecondDouble();
@@ -41,7 +46,9 @@ void Interpolator::Process(float time) // time should be added
 	float tweenTime = (nFrameTime - currentTime) / (nFrameTime - cFrameTime);
 	//float timeDelta = frameTime / tweenTime;
 
-	betweenKeyFrame = Interpolate(currentFrame, currentFrame->GetNext(), tweenTime);
+	return Interpolate(currentFrame, currentFrame->GetNext(), tweenTime);
+
+	
 
 	// Make sure currentTime is valid, assuming we want to loop animations
 	//float animDuration = animPtr->GetDuration();
@@ -55,12 +62,12 @@ KeyFrame Interpolator::Interpolate(KeyFrame* current, KeyFrame* next, float delt
 {
 	KeyFrame newKeyFrame;
 
-	int x = 0;
-	for (size_t bone = 0; bone < 4; bone++)
-		for (size_t row = 0; row < 4; row++)
-			for (size_t column = 0; column < 4; column++)
-				if (current->bones[bone].r[row].m128_f32[column] != next->bones[bone].r[row].m128_f32[column])
-					x += 1;
+	//int x = 0;
+	//for (size_t bone = 0; bone < 4; bone++)
+	//	for (size_t row = 0; row < 4; row++)
+	//		for (size_t column = 0; column < 4; column++)
+	//			if (current->bones[bone].r[row].m128_f32[column] != next->bones[bone].r[row].m128_f32[column])
+	//				x += 1;
 
 	for (size_t i = 0; i < current->bones.size(); i++)
 	{

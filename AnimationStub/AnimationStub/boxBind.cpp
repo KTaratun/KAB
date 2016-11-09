@@ -21,14 +21,16 @@ void MeshClass::Initialize(ID3D11Device* device)
 	device->CreateRasterizerState(&rs_solidDescrip, &p_rsSolid);
 	device->CreateRasterizerState(&rs_wireframeDescrip, &p_rsWireframe);
 
-	FBXLoader::Load("Box_BindPose.fbx", meshes, transformHierarchy, animation);
+	FBXLoader::Load("Box_Jump.fbx", meshes, transformHierarchy, animation);
 
-	std::vector<XMMATRIX> boneMatrices;
+	
 	for (UINT i = 0; i < transformHierarchy.size(); i++)
 	{
 	boneMatrices.push_back(transformHierarchy[i].GetLocal());
 	}
 	
+	
+	interp.SetAnimPtr(&animation);
 
 	XMFLOAT4X4 IdentityMatrix =
 	{
@@ -129,7 +131,7 @@ void MeshClass::Initialize(ID3D11Device* device)
 	objMat = XMMatrixMultiply(scaleMat, objMat);
 
 	XMStoreFloat4x4(&worldMatrix.objectMatrix, objMat);
-	BoneSphere* newboneSphere;
+	
 	for (UINT i = 0; i < boneMatrices.size(); i++)
 	{
 		newboneSphere = new BoneSphere;
@@ -140,8 +142,19 @@ void MeshClass::Initialize(ID3D11Device* device)
 
 }
 
-void MeshClass::Render(ID3D11DeviceContext* deviceContext, ID3D11DepthStencilView* p_dsView, float delta)
+void MeshClass::Render(ID3D11DeviceContext* deviceContext, ID3D11DepthStencilView* p_dsView, ID3D11Device* device, float delta)
 {
+	if (GetAsyncKeyState(VK_RIGHT) & 0x1)
+	{
+		KeyFrame keyframe = interp.Process(delta);
+
+		boneMatrices.clear();
+		for (UINT i = 0; i < keyframe.bones.size(); i++)
+		{
+			boneMatrices.push_back(keyframe.bones[i]);
+		}
+	}
+
 	D3D11_MAPPED_SUBRESOURCE mapRes;
 	deviceContext->Map(constantBuffer, NULL, D3D11_MAP_WRITE_DISCARD, NULL, &mapRes);
 	memcpy(mapRes.pData, &worldMatrix, sizeof(SEND_TO_OBJECT));
@@ -172,6 +185,18 @@ void MeshClass::Render(ID3D11DeviceContext* deviceContext, ID3D11DepthStencilVie
 
 	//deviceContext->ClearDepthStencilView(p_dsView, D3D11_CLEAR_DEPTH, 1.0f, 0);
 
+	//BoneSphere* newboneSphere;
+	if (GetAsyncKeyState(VK_RIGHT) & 0x1)
+	{
+		boneSpheres.clear();
+		for (UINT i = 0; i < boneMatrices.size(); i++)
+		{
+			newboneSphere = new BoneSphere();
+			newboneSphere->Initialize(device, boneMatrices[i]);
+			boneSpheres.push_back(newboneSphere);
+		}
+	}
+
 	for (unsigned int i = 0; i < boneSpheres.size(); i++)
 	{
 		boneSpheres[i]->Render(deviceContext, delta);
@@ -198,6 +223,10 @@ void MeshClass::Shutdown()
 //	RELEASE_COM(texture);
 	RELEASE_COM(shaderResourceView);
 	RELEASE_COM(samplerState);
+
+//	p_dsView->Release();
+	p_rsSolid->Release();
+	p_rsWireframe->Release();
 }
 
 

@@ -460,7 +460,7 @@ bool APP::Run()
 	XMStoreFloat4x4(&scene_matrix.m4x4_view, viewMat);
 
 	Cube->Render(p_context, (float)xTime.Delta());
-	box->Render(p_context,p_dsView, (float)xTime.Delta());
+	box->Render(p_context,p_dsView, p_device, (float)xTime.Delta());
 
 	p_swapchain->Present(0, 0);
 	return true;

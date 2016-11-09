@@ -14,7 +14,7 @@ public:
 	KeyFrame Interpolate(KeyFrame* current, KeyFrame* next, float delta);
 
 	// Creates the "betweenKeyFrame" data based on the animation and currentTime elements
-	void Process(float time);
+	KeyFrame Process(float time);
 
 private:
 	float currentTime;
