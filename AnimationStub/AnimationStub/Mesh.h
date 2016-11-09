@@ -5,11 +5,11 @@
 // Store needed mesh data here.
 struct Vertex
 {
-	float xyz[3];
-	float uvw[3];
-	float normals[3];
-	float bin[3];
-	float tan[3];
+	DirectX::XMFLOAT3 xyz;
+	DirectX::XMFLOAT3 uvw;
+	DirectX::XMFLOAT3 normals;
+	DirectX::XMFLOAT3 bin;
+	DirectX::XMFLOAT3 tan;
 	DirectX::XMINT4 bone;
 	DirectX::XMFLOAT4 weights;
 };
