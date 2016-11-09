@@ -34,6 +34,7 @@ class MeshClass
 	Animation animation;
 	std::vector< unsigned int > control_point_indices;
 	std::vector<BoneSphere*> boneSpheres;
+	ID3D11DepthStencilView* p_dsView;
 protected:
 	UINT indexCount = 0;
 	UINT vertexCount = 0;
@@ -62,7 +63,7 @@ public:
 	~MeshClass() {};
 
 	void Initialize(ID3D11Device* device);
-	void Render(ID3D11DeviceContext* deviceContext, float delta);
+	void Render(ID3D11DeviceContext* deviceContext, ID3D11DepthStencilView* p_dsView, float delta);
 	void Shutdown();
 	//bool loadOBJ(const char* _path, vector<OBJ_VERT>& out_vertices, vector<UINT>& out_indices);
 };

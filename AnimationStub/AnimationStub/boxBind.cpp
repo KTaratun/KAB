@@ -3,13 +3,14 @@
 
 void MeshClass::Initialize(ID3D11Device* device)
 {
-	FBXLoader::Load("Box_BindPose.fbx", meshes, transformHierarchy, animation);
+	FBXLoader::Load("Teddy_Idle.fbx", meshes, transformHierarchy, animation);
 
 	std::vector<XMMATRIX> boneMatrices;
 	for (UINT i = 0; i < transformHierarchy.size(); i++)
 	{
-		boneMatrices.push_back(transformHierarchy[i].GetLocal());
+	boneMatrices.push_back(transformHierarchy[i].GetLocal());
 	}
+	
 
 	XMFLOAT4X4 IdentityMatrix =
 	{
@@ -78,7 +79,7 @@ void MeshClass::Initialize(ID3D11Device* device)
 
 	device->CreateBuffer(&objectConstantBufferDesc, NULL, &constantBuffer);
 
-	CreateDDSTextureFromFile(device, L"TestCube.dds", nullptr, &shaderResourceView);
+	CreateDDSTextureFromFile(device, L"Teddy_D.dds", nullptr, &shaderResourceView);
 
 	D3D11_SAMPLER_DESC samplerDesc;
 	ZeroMemory(&samplerDesc, sizeof(samplerDesc));
@@ -100,7 +101,7 @@ void MeshClass::Initialize(ID3D11Device* device)
 	{ 1, 0, 0, 0,
 		0, 1, 0, 0,
 		0, 0, 1, 0,
-		0, -1, 0, 1 };
+		0, 0, 0, 1 };
 
 	XMMATRIX scaleMat = XMLoadFloat4x4(&ScaleMatrix);
 	XMMATRIX translateMat = XMLoadFloat4x4(&TranslateMatrix);
@@ -110,18 +111,18 @@ void MeshClass::Initialize(ID3D11Device* device)
 	objMat = XMMatrixMultiply(scaleMat, objMat);
 
 	XMStoreFloat4x4(&worldMatrix.objectMatrix, objMat);
-	for (UINT i = 1; i < boneMatrices.size(); i++)
+	BoneSphere* newboneSphere;
+	for (UINT i = 0; i < boneMatrices.size(); i++)
 	{
-
-		BoneSphere* newboneSphere = new BoneSphere();
+		newboneSphere = new BoneSphere;
 		newboneSphere->Initialize(device, boneMatrices[i]);
 		boneSpheres.push_back(newboneSphere);
-		delete newboneSphere;
 	}
+		//delete newboneSphere;
 
 }
 
-void MeshClass::Render(ID3D11DeviceContext* deviceContext, float delta)
+void MeshClass::Render(ID3D11DeviceContext* deviceContext, ID3D11DepthStencilView* p_dsView, float delta)
 {
 	D3D11_MAPPED_SUBRESOURCE mapRes;
 	deviceContext->Map(constantBuffer, NULL, D3D11_MAP_WRITE_DISCARD, NULL, &mapRes);
@@ -147,12 +148,15 @@ void MeshClass::Render(ID3D11DeviceContext* deviceContext, float delta)
 	deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	deviceContext->IASetIndexBuffer(indexBuffer, DXGI_FORMAT_R32_UINT, 0);
 
+
 	deviceContext->Draw(meshes[0].verts.size(), 0);
 
-	//for (unsigned int i = 0; i < boneSpheres.size(); i++)
-	//{
-	//	boneSpheres[i]->Render(deviceContext, delta);
-	//}
+	deviceContext->ClearDepthStencilView(p_dsView, D3D11_CLEAR_DEPTH, 1.0f, 0);
+
+	for (unsigned int i = 0; i < boneSpheres.size(); i++)
+	{
+		boneSpheres[i]->Render(deviceContext, delta);
+	}
 
 
 
@@ -161,13 +165,18 @@ void MeshClass::Render(ID3D11DeviceContext* deviceContext, float delta)
 
 void MeshClass::Shutdown()
 {
+	for (unsigned int i = 0; i < boneSpheres.size(); i++)
+	{
+		boneSpheres[i]->Shutdown();
+		delete boneSpheres[i];
+	}
 	RELEASE_COM(vertexBuffer);
 	RELEASE_COM(indexBuffer);
 	RELEASE_COM(constantBuffer);
 	RELEASE_COM(inputLayout);
 	RELEASE_COM(vertexShader);
 	RELEASE_COM(pixelShader);
-	//	RELEASE_COM(texture);
+//	RELEASE_COM(texture);
 	RELEASE_COM(shaderResourceView);
 	RELEASE_COM(samplerState);
 }
@@ -175,6 +184,8 @@ void MeshClass::Shutdown()
 
 void BoneSphere::Initialize(ID3D11Device* device, XMMATRIX matrix)
 {
+	vertexShader = NULL;
+	pixelShader = NULL;
 	XMFLOAT4X4 IdentityMatrix =
 	{
 		1, 0, 0, 0,
@@ -243,16 +254,16 @@ void BoneSphere::Initialize(ID3D11Device* device, XMMATRIX matrix)
 
 	XMFLOAT4X4 ScaleMatrix =
 	{
-		1, 0, 0, 0,
-		0, 1, 0, 0,
-		0, 0, 1, 0,
+		0.25f, 0, 0, 0,
+		0, 0.25f, 0, 0,
+		0, 0, 0.25f, 0,
 		0, 0, 0, 1
 	};
 	XMFLOAT4X4 TranslateMatrix =
 	{ 1, 0, 0, 0,
 		0, 1, 0, 0,
 		0, 0, 1, 0,
-		0, -1, 0, 1 };
+		0, 0, 0, 1 };
 
 	XMMATRIX scaleMat = XMLoadFloat4x4(&ScaleMatrix);
 	XMMATRIX translateMat = XMLoadFloat4x4(&TranslateMatrix);
