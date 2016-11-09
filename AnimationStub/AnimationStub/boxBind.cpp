@@ -3,6 +3,8 @@
 
 void MeshClass::Initialize(ID3D11Device* device)
 {
+	button = false;
+
 	D3D11_RASTERIZER_DESC rs_solidDescrip;
 	rs_solidDescrip.AntialiasedLineEnable = false;
 	rs_solidDescrip.CullMode = D3D11_CULL_BACK;
@@ -23,13 +25,13 @@ void MeshClass::Initialize(ID3D11Device* device)
 
 	FBXLoader::Load("Box_Jump.fbx", meshes, transformHierarchy, animation);
 
-	
+
 	for (UINT i = 0; i < transformHierarchy.size(); i++)
 	{
-	boneMatrices.push_back(transformHierarchy[i].GetLocal());
+		boneMatrices.push_back(transformHierarchy[i].GetLocal());
 	}
-	
-	
+
+
 	interp.SetAnimPtr(&animation);
 
 	XMFLOAT4X4 IdentityMatrix =
@@ -131,28 +133,44 @@ void MeshClass::Initialize(ID3D11Device* device)
 	objMat = XMMatrixMultiply(scaleMat, objMat);
 
 	XMStoreFloat4x4(&worldMatrix.objectMatrix, objMat);
-	
+
 	for (UINT i = 0; i < boneMatrices.size(); i++)
 	{
 		newboneSphere = new BoneSphere;
 		newboneSphere->Initialize(device, boneMatrices[i]);
 		boneSpheres.push_back(newboneSphere);
 	}
-		//delete newboneSphere;
+	//delete newboneSphere;
 
 }
 
-void MeshClass::Render(ID3D11DeviceContext* deviceContext, ID3D11DepthStencilView* p_dsView, ID3D11Device* device, float delta)
+void MeshClass::Render(ID3D11DeviceContext* deviceContext, ID3D11Device* device, float delta)
 {
-	if (GetAsyncKeyState(VK_RIGHT) & 0x1)
+	if (GetAsyncKeyState(VK_RIGHT)&0x1 && !button)
+		button = true;
+	if (button)
 	{
-		KeyFrame keyframe = interp.Process(delta);
+		KeyFrame keyframe = interp.Process(0.04);
 
 		boneMatrices.clear();
 		for (UINT i = 0; i < keyframe.bones.size(); i++)
 		{
 			boneMatrices.push_back(keyframe.bones[i]);
 		}
+
+		for (UINT i = 0; i < boneSpheres.size(); i++)
+		{
+			boneSpheres[i]->Shutdown();
+		}
+		boneSpheres.clear();
+		for (UINT i = 0; i < boneMatrices.size(); i++)
+		{
+
+			newboneSphere = new BoneSphere();
+			newboneSphere->Initialize(device, boneMatrices[i]);
+			boneSpheres.push_back(newboneSphere);
+		}
+		button = false;
 	}
 
 	D3D11_MAPPED_SUBRESOURCE mapRes;
@@ -186,16 +204,7 @@ void MeshClass::Render(ID3D11DeviceContext* deviceContext, ID3D11DepthStencilVie
 	//deviceContext->ClearDepthStencilView(p_dsView, D3D11_CLEAR_DEPTH, 1.0f, 0);
 
 	//BoneSphere* newboneSphere;
-	if (GetAsyncKeyState(VK_RIGHT) & 0x1)
-	{
-		boneSpheres.clear();
-		for (UINT i = 0; i < boneMatrices.size(); i++)
-		{
-			newboneSphere = new BoneSphere();
-			newboneSphere->Initialize(device, boneMatrices[i]);
-			boneSpheres.push_back(newboneSphere);
-		}
-	}
+
 
 	for (unsigned int i = 0; i < boneSpheres.size(); i++)
 	{
@@ -209,24 +218,27 @@ void MeshClass::Render(ID3D11DeviceContext* deviceContext, ID3D11DepthStencilVie
 
 void MeshClass::Shutdown()
 {
-	for (unsigned int i = 0; i < boneSpheres.size(); i++)
-	{
-		boneSpheres[i]->Shutdown();
-		delete boneSpheres[i];
-	}
+
 	RELEASE_COM(vertexBuffer);
 	RELEASE_COM(indexBuffer);
 	RELEASE_COM(constantBuffer);
 	RELEASE_COM(inputLayout);
 	RELEASE_COM(vertexShader);
 	RELEASE_COM(pixelShader);
-//	RELEASE_COM(texture);
+	//	RELEASE_COM(texture);
 	RELEASE_COM(shaderResourceView);
 	RELEASE_COM(samplerState);
 
-//	p_dsView->Release();
+	//	p_dsView->Release();
 	p_rsSolid->Release();
 	p_rsWireframe->Release();
+	for (unsigned int i = 0; i < boneSpheres.size(); i++)
+	{
+		boneSpheres[i]->Shutdown();
+		//if(boneSpheres[i])
+		//delete boneSpheres[i];
+	}
+	
 }
 
 
@@ -357,7 +369,9 @@ void BoneSphere::Shutdown()
 	RELEASE_COM(inputLayout);
 	RELEASE_COM(vertexShader);
 	RELEASE_COM(pixelShader);
-	//RELEASE_COM(texture);
+	//	RELEASE_COM(texture);
 	RELEASE_COM(shaderResourceView);
 	RELEASE_COM(samplerState);
+	
+	delete this;
 }

@@ -24,25 +24,22 @@
     <ClInclude Include="targetver.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Resource.h">
+    <ClInclude Include="Animation.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="AnimStubApp.h">
+    <ClInclude Include="FBXLoader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="cubeModel.h">
+    <ClInclude Include="Interpolator.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="DDSTextureLoader.h">
+    <ClInclude Include="KeyFrame.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="modelClass.h">
+    <ClInclude Include="Mesh.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="xTime.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="boxBind.h">
+    <ClInclude Include="TransformNode.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -50,48 +47,23 @@
     <ClCompile Include="stdafx.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="AnimStubApp.cpp">
+    <ClCompile Include="Animation.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="cubeModel.cpp">
+    <ClCompile Include="FBXLoader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="DDSTextureLoader.cpp">
+    <ClCompile Include="Interpolator.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="main.cpp">
+    <ClCompile Include="KeyFrame.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="modelClass.cpp">
+    <ClCompile Include="Mesh.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="xTime.cpp">
+    <ClCompile Include="TransformNode.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="boxBind.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <ResourceCompile Include="AnimationStub.rc">
-      <Filter>Resource Files</Filter>
-    </ResourceCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <Image Include="small.ico">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="AnimationStub.ico">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="moon.dds" />
-  </ItemGroup>
-  <ItemGroup>
-    <FxCompile Include="OBJ_PS.hlsl" />
-    <FxCompile Include="OBJ_VS.hlsl" />
-    <FxCompile Include="FBX_VS.hlsl" />
-    <FxCompile Include="FBX_PS.hlsl" />
-    <FxCompile Include="Bone_VS.hlsl" />
-    <FxCompile Include="Bone_PS.hlsl" />
   </ItemGroup>
 </Project>

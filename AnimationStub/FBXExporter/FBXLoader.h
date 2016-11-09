@@ -1,7 +1,6 @@
 #pragma once
 #include <string>
 #include <vector>
-#include <fbxsdk.h>
 
 #include "Mesh.h"
 #include "TransformNode.h"
