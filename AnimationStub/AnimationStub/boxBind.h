@@ -50,6 +50,9 @@ protected:
 	ID3D11ShaderResourceView* shaderResourceView;
 	ID3D11SamplerState* samplerState;
 
+	ID3D11RasterizerState* p_rsSolid;
+	ID3D11RasterizerState* p_rsWireframe;
+
 	struct SEND_TO_OBJECT
 	{
 		XMFLOAT4X4 objectMatrix;

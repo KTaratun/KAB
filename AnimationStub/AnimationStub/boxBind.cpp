@@ -3,7 +3,25 @@
 
 void MeshClass::Initialize(ID3D11Device* device)
 {
-	FBXLoader::Load("Teddy_Idle.fbx", meshes, transformHierarchy, animation);
+	D3D11_RASTERIZER_DESC rs_solidDescrip;
+	rs_solidDescrip.AntialiasedLineEnable = false;
+	rs_solidDescrip.CullMode = D3D11_CULL_BACK;
+	rs_solidDescrip.DepthBias = 0;
+	rs_solidDescrip.DepthBiasClamp = 0.0f;
+	rs_solidDescrip.DepthClipEnable = true;
+	rs_solidDescrip.FillMode = D3D11_FILL_SOLID;
+	rs_solidDescrip.FrontCounterClockwise = false;
+	rs_solidDescrip.MultisampleEnable = false;
+	rs_solidDescrip.ScissorEnable = false;
+	rs_solidDescrip.SlopeScaledDepthBias = 0.0f;
+
+	D3D11_RASTERIZER_DESC rs_wireframeDescrip = rs_solidDescrip;
+	rs_wireframeDescrip.FillMode = D3D11_FILL_WIREFRAME;
+
+	device->CreateRasterizerState(&rs_solidDescrip, &p_rsSolid);
+	device->CreateRasterizerState(&rs_wireframeDescrip, &p_rsWireframe);
+
+	FBXLoader::Load("Box_BindPose.fbx", meshes, transformHierarchy, animation);
 
 	std::vector<XMMATRIX> boneMatrices;
 	for (UINT i = 0; i < transformHierarchy.size(); i++)
@@ -79,7 +97,7 @@ void MeshClass::Initialize(ID3D11Device* device)
 
 	device->CreateBuffer(&objectConstantBufferDesc, NULL, &constantBuffer);
 
-	CreateDDSTextureFromFile(device, L"Teddy_D.dds", nullptr, &shaderResourceView);
+	CreateDDSTextureFromFile(device, L"TestCube.dds", nullptr, &shaderResourceView);
 
 	D3D11_SAMPLER_DESC samplerDesc;
 	ZeroMemory(&samplerDesc, sizeof(samplerDesc));
@@ -148,10 +166,11 @@ void MeshClass::Render(ID3D11DeviceContext* deviceContext, ID3D11DepthStencilVie
 	deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	deviceContext->IASetIndexBuffer(indexBuffer, DXGI_FORMAT_R32_UINT, 0);
 
-
+	deviceContext->RSSetState(p_rsWireframe);
 	deviceContext->Draw(meshes[0].verts.size(), 0);
+	deviceContext->RSSetState(p_rsSolid);
 
-	deviceContext->ClearDepthStencilView(p_dsView, D3D11_CLEAR_DEPTH, 1.0f, 0);
+	//deviceContext->ClearDepthStencilView(p_dsView, D3D11_CLEAR_DEPTH, 1.0f, 0);
 
 	for (unsigned int i = 0; i < boneSpheres.size(); i++)
 	{

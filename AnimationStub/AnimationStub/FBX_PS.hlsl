@@ -50,7 +50,7 @@ cbuffer LightBuffer1 : register(b0)
 float4 main(P_IN input) : SV_TARGET
 {
 
-	float4 textureColor = baseTexture.Sample(filters[0], input.uv);
+	float4 textureColor = baseTexture.Sample(filters[0], (float2)input.uv);
 
 	//Ambient Light
 	float4 ambientResult = ambientDiffuse*textureColor;
