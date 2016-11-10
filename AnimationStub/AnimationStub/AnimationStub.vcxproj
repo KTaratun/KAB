@@ -22,7 +22,7 @@
     <ProjectGuid>{4EBF49C7-966E-4B90-A5E1-EF43155937F7}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>AnimationStub</RootNamespace>
-    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.14393.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -76,8 +76,8 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>C:\Program Files\Autodesk\FBX\FBX SDK\2016.1.2\include;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\Program Files\Autodesk\FBX\FBX SDK\2016.1.2\lib\vs2015;$(LibraryPath)</LibraryPath>
+    <IncludePath>D:\Program Files\Autodesk\FBX\FBX SDK\2017.0.1\include;C:\Program Files\Autodesk\FBX\FBX SDK\2016.1.2\include;$(IncludePath)</IncludePath>
+    <LibraryPath>D:\Program Files\Autodesk\FBX\FBX SDK\2017.0.1\lib\vs2015;C:\Program Files\Autodesk\FBX\FBX SDK\2016.1.2\lib\vs2015;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
