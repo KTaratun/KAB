@@ -418,26 +418,79 @@ bool APP::Run()
 		XMStoreFloat4x4(&m4x4_camera, cameraMat);
 	}
 
-	LPPOINT m = &mouse;
-	GetCursorPos(m);
+	//LPPOINT m = &mouse;
+	//GetCursorPos(m);
 
-	if (GetAsyncKeyState(VK_RBUTTON) && !mouseDown)
-		mouseDown = true;
-	else if (!GetAsyncKeyState(VK_RBUTTON))
-		mouseDown = false;
+	//if (GetAsyncKeyState(VK_RBUTTON) && !mouseDown)
+	//	mouseDown = true;
+	//else if (!GetAsyncKeyState(VK_RBUTTON))
+	//	mouseDown = false;
 
-	if (mouseDown)
+	//if (mouseDown)
+	//{
+	//	LPPOINT m2 = &mouse2;
+	//	GetCursorPos(m2);
+
+	//	XMMATRIX newcamera = XMLoadFloat4x4(&m4x4_camera);
+	//	XMVECTOR pos = newcamera.r[3];
+	//	newcamera.r[3] = XMLoadFloat4(&XMFLOAT4(0, 0, 0, 1));
+	//	newcamera = XMMatrixRotationX(-(mouse2.y - mouse.y)*0.1f)*newcamera*XMMatrixRotationY(-(mouse2.x - mouse.x)*0.1f);
+	//	newcamera.r[3] = pos;
+
+	//	XMStoreFloat4x4(&m4x4_camera, newcamera);
+	//}
+
+	if (GetAsyncKeyState(VK_RIGHT))
 	{
-		LPPOINT m2 = &mouse2;
-		GetCursorPos(m2);
+		XMMATRIX camMat = XMLoadFloat4x4(&m4x4_camera);
+		XMFLOAT3 position = { camMat.r[3].m128_f32[0], camMat.r[3].m128_f32[1], camMat.r[3].m128_f32[2] };
+		camMat.r[3].m128_f32[0] = 0;
+		camMat.r[3].m128_f32[1] = 0;
+		camMat.r[3].m128_f32[2] = 0;
 
-		XMMATRIX newcamera = XMLoadFloat4x4(&m4x4_camera);
-		XMVECTOR pos = newcamera.r[3];
-		newcamera.r[3] = XMLoadFloat4(&XMFLOAT4(0, 0, 0, 1));
-		newcamera = XMMatrixRotationX(-(mouse2.y - mouse.y)*0.1f)*newcamera*XMMatrixRotationY(-(mouse2.x - mouse.x)*0.1f);
-		newcamera.r[3] = pos;
+		camMat = XMMatrixMultiply(camMat, XMMatrixRotationY(xTime.Delta()));
 
-		XMStoreFloat4x4(&m4x4_camera, newcamera);
+		camMat.r[3].m128_f32[0] = position.x;
+		camMat.r[3].m128_f32[1] = position.y;
+		camMat.r[3].m128_f32[2] = position.z;
+
+		XMStoreFloat4x4(&m4x4_camera, camMat);
+	}
+
+	if (GetAsyncKeyState(VK_LEFT))
+	{
+		XMMATRIX camMat = XMLoadFloat4x4(&m4x4_camera);
+		XMFLOAT3 position = { camMat.r[3].m128_f32[0], camMat.r[3].m128_f32[1], camMat.r[3].m128_f32[2] };
+		camMat.r[3].m128_f32[0] = 0;
+		camMat.r[3].m128_f32[1] = 0;
+		camMat.r[3].m128_f32[2] = 0;
+
+		camMat = XMMatrixMultiply(camMat, XMMatrixRotationY(-xTime.Delta()));
+
+		camMat.r[3].m128_f32[0] = position.x;
+		camMat.r[3].m128_f32[1] = position.y;
+		camMat.r[3].m128_f32[2] = position.z;
+
+		XMStoreFloat4x4(&m4x4_camera, camMat);
+	}
+
+	if (GetAsyncKeyState(VK_UP))
+	{
+		XMMATRIX camMat = XMLoadFloat4x4(&m4x4_camera);
+
+		camMat = XMMatrixMultiply(XMMatrixRotationX(-xTime.Delta()), camMat);
+
+		XMStoreFloat4x4(&m4x4_camera, camMat);
+
+	}
+
+	if (GetAsyncKeyState(VK_DOWN))
+	{
+		XMMATRIX camMat = XMLoadFloat4x4(&m4x4_camera);
+
+		camMat = XMMatrixMultiply(XMMatrixRotationX(xTime.Delta()), camMat);
+
+		XMStoreFloat4x4(&m4x4_camera, camMat);
 	}
 
 
