@@ -40,8 +40,6 @@ protected:
 		XMFLOAT4X4 objectMatrix;
 	};
 
-	SEND_TO_OBJECT worldMatrix;
-
 public:
 
 	ModelClass() {};
@@ -51,4 +49,5 @@ public:
 	virtual void Render(ID3D11DeviceContext* deviceContext, float delta);
 	virtual void Shutdown();
 	bool loadOBJ(const char* _path, vector<OBJ_VERT>& out_vertices, vector<UINT>& out_indices);
+	SEND_TO_OBJECT worldMatrix;
 };

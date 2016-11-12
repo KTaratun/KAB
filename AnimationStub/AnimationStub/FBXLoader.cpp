@@ -682,7 +682,6 @@ namespace FBXLoader
 					for (size_t j = 0; j < 4; j++)
 						newBind.r[i].m128_f32[j] = bindMatrix.mData[i][j];
 				
-
 				hierarchy[currJointIndex].SetLocal(newBind);
 
 				unsigned int numIndicies = currCluster->GetControlPointIndicesCount();
@@ -821,12 +820,12 @@ namespace FBXLoader
 		FbxTakeInfo* takeInfo = fbxScene->GetTakeInfo(animation.GetName());
 		FbxTime start = takeInfo->mLocalTimeSpan.GetStart();
 		FbxTime end = takeInfo->mLocalTimeSpan.GetStop();
-		FbxLongLong k = start.GetFrameCount(FbxTime::eFrames24); //for debugging
-		FbxLongLong l = end.GetFrameCount(FbxTime::eFrames24); //for debugging
+		FbxLongLong startFrame = start.GetFrameCount(FbxTime::eFrames24); //for debugging
+		FbxLongLong endFrame = end.GetFrameCount(FbxTime::eFrames24); //for debugging
 		animation.SetDuration(end.GetFrameCount(FbxTime::eFrames24) - start.GetFrameCount(FbxTime::eFrames24) + 1);
 		KeyFrame* old;
 
-		for (FbxLongLong i = 0; i <= end.GetFrameCount(FbxTime::eFrames24); ++i) //forced i to be 0 instead of k since it was giving a different value
+		for (FbxLongLong i = startFrame; i <= endFrame; ++i) //forced i to be 0 instead of k since it was giving a different value
 		{
 			//KeyFrame* currAnim = animation.keyFrames[i];
 			KeyFrame* currAnim = new KeyFrame();
@@ -838,10 +837,20 @@ namespace FBXLoader
 			{
 				FbxAMatrix geometryTransform = GetGeometryTransformation(fbx_joints[j]);
 				FbxAMatrix currentTransformOffset = fbx_joints[j]->EvaluateGlobalTransform(currTime) * geometryTransform;
+
+				//currentTransformOffset.mData[0][2] *= -1;
+				//currentTransformOffset.mData[1][2] *= -1;
+				//currentTransformOffset.mData[2][0] *= -1;
+				//currentTransformOffset.mData[2][1] *= -1;
+				//currentTransformOffset.mData[2][2] *= -1;
+				//currentTransformOffset.mData[2][3] *= -1;
+				currentTransformOffset.mData[3][2] *= -1;
+
+				//currentTransformOffset *= *geometryTransform;
 				//currAnim->SetGlobalTransform(currentTransformOffset.Inverse() * fbx_joints[j]->EvaluateGlobalTransform(currTime));
 
-				currentTransformOffset = currentTransformOffset.Inverse();
-				FbxAMatrix eval = fbx_joints[j]->EvaluateGlobalTransform(currTime);
+				//currentTransformOffset = currentTransformOffset.Inverse();
+				//FbxAMatrix eval = fbx_joints[j]->EvaluateGlobalTransform(currTime);
 
 
 				XMMATRIX newTranOff;
@@ -849,13 +858,13 @@ namespace FBXLoader
 					for (size_t j = 0; j < 4; j++)
 						newTranOff.r[i].m128_f32[j] = currentTransformOffset.mData[i][j];
 
-				XMMATRIX newEval;
-				for (size_t i = 0; i < 4; i++)
-					for (size_t j = 0; j < 4; j++)
-						newEval.r[i].m128_f32[j] = currentTransformOffset.mData[i][j];
+				//XMMATRIX newEval;
+				//for (size_t i = 0; i < 4; i++)
+				//	for (size_t j = 0; j < 4; j++)
+				//		newEval.r[i].m128_f32[j] = eval.mData[i][j];
 
 
-				currAnim->bones.push_back(newTranOff * newEval);
+				currAnim->bones.push_back(newTranOff); // * newEval
 			}
 			animation.keyFrames.push_back(currAnim);
 			animation.keyFrames[i]->SetKeyTime(currTime);

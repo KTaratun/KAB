@@ -37,6 +37,14 @@ class MeshClass
 	std::vector<BoneSphere*> boneSpheres;
 	std::vector<XMMATRIX> boneMatrices;
 	BoneSphere* newboneSphere;
+	KeyFrame* old = new KeyFrame();
+	XMMATRIX boneScaleMatrix =
+	{
+		0.25f, 0, 0, 0,
+		0, 0.25f, 0, 0,
+		0, 0, 0.25f, 0,
+		0, 0, 0, 1
+	};
 protected:
 	UINT indexCount = 0;
 	UINT vertexCount = 0;

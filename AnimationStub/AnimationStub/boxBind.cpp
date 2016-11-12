@@ -28,10 +28,6 @@ void MeshClass::Initialize(ID3D11Device* device)
 	{
 	boneMatrices.push_back(transformHierarchy[i].GetLocal());
 	}
-	
-	
-	interp.SetAnimPtr(&animation);
-
 	XMFLOAT4X4 IdentityMatrix =
 	{
 		1, 0, 0, 0,
@@ -39,6 +35,16 @@ void MeshClass::Initialize(ID3D11Device* device)
 		0, 0, 1, 0,
 		0, 0, 0, 1
 	};
+
+	//int num = 2;
+	//for (UINT i = 0; i < animation.keyFrames[num]->bones.size(); i++)
+	//{
+	//	boneMatrices.push_back(animation.keyFrames[num]->bones[i]);
+	//}
+	
+	
+	interp.SetAnimPtr(&animation);
+
 
 	worldMatrix.objectMatrix = IdentityMatrix;
 
@@ -144,16 +150,16 @@ void MeshClass::Initialize(ID3D11Device* device)
 
 void MeshClass::Render(ID3D11DeviceContext* deviceContext, ID3D11DepthStencilView* p_dsView, ID3D11Device* device, float delta)
 {
-	if (GetAsyncKeyState(VK_RIGHT) & 0x1)
-	{
-		KeyFrame keyframe = interp.Process(delta);
-
-		boneMatrices.clear();
-		for (UINT i = 0; i < keyframe.bones.size(); i++)
-		{
-			boneMatrices.push_back(keyframe.bones[i]);
-		}
-	}
+	//if (GetAsyncKeyState(VK_TAB) & 0x1)
+	//{
+	//	KeyFrame keyframe = interp.Process(delta);
+	//
+	//	boneMatrices.clear();
+	//	for (UINT i = 0; i < keyframe.bones.size(); i++)
+	//	{
+	//		boneMatrices.push_back(keyframe.bones[i]);
+	//	}
+	//}
 
 	D3D11_MAPPED_SUBRESOURCE mapRes;
 	deviceContext->Map(constantBuffer, NULL, D3D11_MAP_WRITE_DISCARD, NULL, &mapRes);
@@ -184,17 +190,30 @@ void MeshClass::Render(ID3D11DeviceContext* deviceContext, ID3D11DepthStencilVie
 	deviceContext->RSSetState(p_rsSolid);
 
 	//deviceContext->ClearDepthStencilView(p_dsView, D3D11_CLEAR_DEPTH, 1.0f, 0);
-
+	
+	KeyFrame keyframe = interp.Process(delta);
+	
 	//BoneSphere* newboneSphere;
-	if (GetAsyncKeyState(VK_RIGHT) & 0x1)
+	//if (GetAsyncKeyState(VK_TAB) & 0x1)
+	if (keyframe.GetKeyTime() != old->GetKeyTime())
 	{
-		boneSpheres.clear();
-		for (UINT i = 0; i < boneMatrices.size(); i++)
+		//boneMatrices.clear();
+		for (UINT i = 0; i < keyframe.bones.size(); i++)
 		{
-			newboneSphere = new BoneSphere();
-			newboneSphere->Initialize(device, boneMatrices[i]);
-			boneSpheres.push_back(newboneSphere);
+			XMStoreFloat4x4(&boneSpheres[i]->worldMatrix.objectMatrix, XMMatrixMultiply(boneScaleMatrix, keyframe.bones[i]));
+			//XMMATRIX temp = XMLoadFloat4x4(&boneTransforms[i]);
+			//temp = keyframe.bones[i];
+			//XMStoreFloat4x4(&boneTransforms[i], temp);
 		}
+
+			//boneSpheres.clear();
+		//for (UINT i = 0; i < boneMatrices.size(); i++)
+		//{
+		//	boneSpheres[i]->
+		//	//newboneSphere = new BoneSphere();
+		//	//newboneSphere->Initialize(device, boneMatrices[i]);
+		//	//boneSpheres.push_back(newboneSphere);
+		//}
 	}
 
 	for (unsigned int i = 0; i < boneSpheres.size(); i++)
@@ -202,9 +221,7 @@ void MeshClass::Render(ID3D11DeviceContext* deviceContext, ID3D11DepthStencilVie
 		boneSpheres[i]->Render(deviceContext, delta);
 	}
 
-
-
-
+	*old = keyframe;
 }
 
 void MeshClass::Shutdown()
@@ -242,9 +259,7 @@ void BoneSphere::Initialize(ID3D11Device* device, XMMATRIX matrix)
 		0, 0, 0, 1
 	};
 
-
 	XMStoreFloat4x4(&worldMatrix.objectMatrix, matrix);
-
 
 	vector<OBJ_VERT> sphere;
 	vector<UINT> sphereIndices;

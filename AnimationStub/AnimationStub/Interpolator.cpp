@@ -25,6 +25,12 @@ KeyFrame Interpolator::Process(float time) // time should be added
 
 	if (currentFrame == NULL)
 		currentFrame = animPtr->keyFrames[0];
+	
+	//
+	//currentFrame = currentFrame->GetNext();
+	//return *currentFrame;
+
+
 
 	// Get new time 
 	AddTime(time);
@@ -32,6 +38,7 @@ KeyFrame Interpolator::Process(float time) // time should be added
 	if (currentTime > finalTime)
 	{
 		currentTime = 0;
+		currentFrame = animPtr->keyFrames[0];
 	}
 
 	float cFrameTime = (float)currentFrame->GetKeyTime().GetSecondDouble();
@@ -46,6 +53,7 @@ KeyFrame Interpolator::Process(float time) // time should be added
 	float tweenTime = (nFrameTime - currentTime) / (nFrameTime - cFrameTime);
 	//float timeDelta = frameTime / tweenTime;
 
+	return *currentFrame;
 	return Interpolate(currentFrame, currentFrame->GetNext(), tweenTime);
 
 	
@@ -60,6 +68,7 @@ KeyFrame Interpolator::Process(float time) // time should be added
 
 KeyFrame Interpolator::Interpolate(KeyFrame* current, KeyFrame* next, float delta)
 {
+	delta = 0;
 	KeyFrame newKeyFrame;
 
 	//int x = 0;
