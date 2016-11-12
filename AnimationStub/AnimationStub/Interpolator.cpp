@@ -50,13 +50,14 @@ KeyFrame Interpolator::Process(float time) // time should be added
 		nFrameTime = (float)currentFrame->GetNext()->GetKeyTime().GetSecondDouble();
 	}
 	float frameTime = nFrameTime - cFrameTime;
-	float tweenTime = (nFrameTime - currentTime) / (nFrameTime - cFrameTime);
+	float tweenTime = nFrameTime - currentTime;
+	if (frameTime != tweenTime)
+		int x = 0;
+
+	float delta = 1 - (tweenTime / frameTime);
 	//float timeDelta = frameTime / tweenTime;
 
-	return *currentFrame;
-	return Interpolate(currentFrame, currentFrame->GetNext(), tweenTime);
-
-	
+	return Interpolate(currentFrame, currentFrame->GetNext(), delta);
 
 	// Make sure currentTime is valid, assuming we want to loop animations
 	//float animDuration = animPtr->GetDuration();
@@ -68,7 +69,6 @@ KeyFrame Interpolator::Process(float time) // time should be added
 
 KeyFrame Interpolator::Interpolate(KeyFrame* current, KeyFrame* next, float delta)
 {
-	delta = 0;
 	KeyFrame newKeyFrame;
 
 	//int x = 0;
@@ -91,5 +91,7 @@ KeyFrame Interpolator::Interpolate(KeyFrame* current, KeyFrame* next, float delt
 		newKeyFrame.bones.push_back(MatrixNow);
 	}
 
+	//float newKeyTime = (next->GetKeyTime().GetSecondDouble() * delta) + (current->GetKeyTime().GetSecondDouble() * (1 - delta));
+	//newKeyFrame.SetKeyTime(newKeyTime);
 	return newKeyFrame;
 }

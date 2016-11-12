@@ -21,7 +21,7 @@ void MeshClass::Initialize(ID3D11Device* device)
 	device->CreateRasterizerState(&rs_solidDescrip, &p_rsSolid);
 	device->CreateRasterizerState(&rs_wireframeDescrip, &p_rsWireframe);
 
-	FBXLoader::Load("Box_Jump.fbx", meshes, transformHierarchy, animation);
+	FBXLoader::Load("Teddy_Idle.fbx", meshes, transformHierarchy, animation);
 
 	
 	for (UINT i = 0; i < transformHierarchy.size(); i++)
@@ -105,7 +105,7 @@ void MeshClass::Initialize(ID3D11Device* device)
 
 	device->CreateBuffer(&objectConstantBufferDesc, NULL, &constantBuffer);
 
-	CreateDDSTextureFromFile(device, L"TestCube.dds", nullptr, &shaderResourceView);
+	CreateDDSTextureFromFile(device, L"Teddy_D.dds", nullptr, &shaderResourceView);
 
 	D3D11_SAMPLER_DESC samplerDesc;
 	ZeroMemory(&samplerDesc, sizeof(samplerDesc));
@@ -195,16 +195,11 @@ void MeshClass::Render(ID3D11DeviceContext* deviceContext, ID3D11DepthStencilVie
 	
 	//BoneSphere* newboneSphere;
 	//if (GetAsyncKeyState(VK_TAB) & 0x1)
-	if (keyframe.GetKeyTime() != old->GetKeyTime())
-	{
+	//if (keyframe.GetKeyTime() != old->GetKeyTime())
+	//{
 		//boneMatrices.clear();
 		for (UINT i = 0; i < keyframe.bones.size(); i++)
-		{
 			XMStoreFloat4x4(&boneSpheres[i]->worldMatrix.objectMatrix, XMMatrixMultiply(boneScaleMatrix, keyframe.bones[i]));
-			//XMMATRIX temp = XMLoadFloat4x4(&boneTransforms[i]);
-			//temp = keyframe.bones[i];
-			//XMStoreFloat4x4(&boneTransforms[i], temp);
-		}
 
 			//boneSpheres.clear();
 		//for (UINT i = 0; i < boneMatrices.size(); i++)
@@ -214,7 +209,7 @@ void MeshClass::Render(ID3D11DeviceContext* deviceContext, ID3D11DepthStencilVie
 		//	//newboneSphere->Initialize(device, boneMatrices[i]);
 		//	//boneSpheres.push_back(newboneSphere);
 		//}
-	}
+	//}
 
 	for (unsigned int i = 0; i < boneSpheres.size(); i++)
 	{
