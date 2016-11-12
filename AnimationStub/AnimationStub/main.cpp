@@ -152,7 +152,7 @@ APP::APP(HINSTANCE hinst, WNDPROC proc)
 	light_data.diffuse_ambientLight = { 0.2f,0.2f,0.2f,1.0f };
 
 	light_data.diffuse_spotLight = { 1,1,1,1 };
-	light_data.position_spotLight = { 0,2,0,1 };
+	light_data.position_spotLight = { -6, 4, 4, 1 };
 	light_data.direction_spotLight = { 0.75,-0.75f,-0.75f,1 };
 	light_data.ratio_spotLight = 0.93f;
 

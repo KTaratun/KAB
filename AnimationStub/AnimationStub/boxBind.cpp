@@ -21,8 +21,7 @@ void MeshClass::Initialize(ID3D11Device* device)
 	device->CreateRasterizerState(&rs_solidDescrip, &p_rsSolid);
 	device->CreateRasterizerState(&rs_wireframeDescrip, &p_rsWireframe);
 
-	FBXLoader::Load("Box_Jump.fbx", meshes, transformHierarchy, animation);
-
+	FBXLoader::Load("Box_Idle.fbx", meshes, transformHierarchy, animation);
 	
 	for (UINT i = 0; i < transformHierarchy.size(); i++)
 	{
@@ -35,13 +34,6 @@ void MeshClass::Initialize(ID3D11Device* device)
 		0, 0, 1, 0,
 		0, 0, 0, 1
 	};
-
-	//int num = 2;
-	//for (UINT i = 0; i < animation.keyFrames[num]->bones.size(); i++)
-	//{
-	//	boneMatrices.push_back(animation.keyFrames[num]->bones[i]);
-	//}
-	
 	
 	interp.SetAnimPtr(&animation);
 
@@ -49,22 +41,6 @@ void MeshClass::Initialize(ID3D11Device* device)
 	worldMatrix.objectMatrix = IdentityMatrix;
 
 	HRESULT hr;
-
-	/*D3D11_BUFFER_DESC indexBufferDesc;
-	ZeroMemory(&indexBufferDesc, sizeof(indexBufferDesc));
-	indexBufferDesc.Usage = D3D11_USAGE_IMMUTABLE;
-	indexBufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
-	indexBufferDesc.CPUAccessFlags = NULL;
-	indexBufferDesc.ByteWidth = sizeof(UINT) * control_point_indices.size();
-	indexBufferDesc.MiscFlags = 0;
-
-	D3D11_SUBRESOURCE_DATA initialData;
-	ZeroMemory(&initialData, sizeof(initialData));
-	initialData.pSysMem = control_point_indices.data();
-	initialData.SysMemPitch = 0;
-	initialData.SysMemSlicePitch = 0;
-
-	hr = device->CreateBuffer(&indexBufferDesc, &initialData, &indexBuffer);*/
 
 	D3D11_BUFFER_DESC vertexBufferDesc;
 	ZeroMemory(&vertexBufferDesc, sizeof(vertexBufferDesc));
@@ -150,17 +126,6 @@ void MeshClass::Initialize(ID3D11Device* device)
 
 void MeshClass::Render(ID3D11DeviceContext* deviceContext, ID3D11DepthStencilView* p_dsView, ID3D11Device* device, float delta)
 {
-	//if (GetAsyncKeyState(VK_TAB) & 0x1)
-	//{
-	//	KeyFrame keyframe = interp.Process(delta);
-	//
-	//	boneMatrices.clear();
-	//	for (UINT i = 0; i < keyframe.bones.size(); i++)
-	//	{
-	//		boneMatrices.push_back(keyframe.bones[i]);
-	//	}
-	//}
-
 	D3D11_MAPPED_SUBRESOURCE mapRes;
 	deviceContext->Map(constantBuffer, NULL, D3D11_MAP_WRITE_DISCARD, NULL, &mapRes);
 	memcpy(mapRes.pData, &worldMatrix, sizeof(SEND_TO_OBJECT));
@@ -188,32 +153,15 @@ void MeshClass::Render(ID3D11DeviceContext* deviceContext, ID3D11DepthStencilVie
 	deviceContext->RSSetState(p_rsWireframe);
 	deviceContext->Draw(meshes[0].verts.size(), 0);
 	deviceContext->RSSetState(p_rsSolid);
-
-	//deviceContext->ClearDepthStencilView(p_dsView, D3D11_CLEAR_DEPTH, 1.0f, 0);
 	
 	KeyFrame keyframe = interp.Process(delta);
 	
-	//BoneSphere* newboneSphere;
-	//if (GetAsyncKeyState(VK_TAB) & 0x1)
 	if (keyframe.GetKeyTime() != old->GetKeyTime())
 	{
-		//boneMatrices.clear();
 		for (UINT i = 0; i < keyframe.bones.size(); i++)
 		{
 			XMStoreFloat4x4(&boneSpheres[i]->worldMatrix.objectMatrix, XMMatrixMultiply(boneScaleMatrix, keyframe.bones[i]));
-			//XMMATRIX temp = XMLoadFloat4x4(&boneTransforms[i]);
-			//temp = keyframe.bones[i];
-			//XMStoreFloat4x4(&boneTransforms[i], temp);
 		}
-
-			//boneSpheres.clear();
-		//for (UINT i = 0; i < boneMatrices.size(); i++)
-		//{
-		//	boneSpheres[i]->
-		//	//newboneSphere = new BoneSphere();
-		//	//newboneSphere->Initialize(device, boneMatrices[i]);
-		//	//boneSpheres.push_back(newboneSphere);
-		//}
 	}
 
 	for (unsigned int i = 0; i < boneSpheres.size(); i++)
