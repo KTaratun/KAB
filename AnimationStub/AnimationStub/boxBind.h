@@ -40,9 +40,9 @@ class MeshClass
 	KeyFrame* old = new KeyFrame();
 	XMMATRIX boneScaleMatrix =
 	{
-		0.25f, 0, 0, 0,
-		0, 0.25f, 0, 0,
-		0, 0, 0.25f, 0,
+		0.1f, 0, 0, 0,
+		0, 0.1f, 0, 0,
+		0, 0, 0.1f, 0,
 		0, 0, 0, 1
 	};
 protected:

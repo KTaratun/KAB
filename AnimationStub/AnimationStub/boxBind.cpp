@@ -5,7 +5,7 @@ void MeshClass::Initialize(ID3D11Device* device)
 {
 	D3D11_RASTERIZER_DESC rs_solidDescrip;
 	rs_solidDescrip.AntialiasedLineEnable = false;
-	rs_solidDescrip.CullMode = D3D11_CULL_BACK;
+	rs_solidDescrip.CullMode = D3D11_CULL_NONE;
 	rs_solidDescrip.DepthBias = 0;
 	rs_solidDescrip.DepthBiasClamp = 0.0f;
 	rs_solidDescrip.DepthClipEnable = true;
@@ -21,12 +21,13 @@ void MeshClass::Initialize(ID3D11Device* device)
 	device->CreateRasterizerState(&rs_solidDescrip, &p_rsSolid);
 	device->CreateRasterizerState(&rs_wireframeDescrip, &p_rsWireframe);
 
-	FBXLoader::Load("Box_Idle.fbx", meshes, transformHierarchy, animation);
-	
+	FBXLoader::Load("Box_Jump.fbx", meshes, transformHierarchy, animation);
+
 	for (UINT i = 0; i < transformHierarchy.size(); i++)
 	{
-	boneMatrices.push_back(transformHierarchy[i].GetLocal());
+		boneMatrices.push_back(transformHierarchy[i].GetLocal());
 	}
+
 	XMFLOAT4X4 IdentityMatrix =
 	{
 		1, 0, 0, 0,
@@ -34,7 +35,7 @@ void MeshClass::Initialize(ID3D11Device* device)
 		0, 0, 1, 0,
 		0, 0, 0, 1
 	};
-	
+
 	interp.SetAnimPtr(&animation);
 
 
@@ -113,14 +114,14 @@ void MeshClass::Initialize(ID3D11Device* device)
 	objMat = XMMatrixMultiply(scaleMat, objMat);
 
 	XMStoreFloat4x4(&worldMatrix.objectMatrix, objMat);
-	
+
 	for (UINT i = 0; i < boneMatrices.size(); i++)
 	{
 		newboneSphere = new BoneSphere;
 		newboneSphere->Initialize(device, boneMatrices[i]);
 		boneSpheres.push_back(newboneSphere);
 	}
-		//delete newboneSphere;
+	//delete newboneSphere;
 
 }
 
@@ -150,18 +151,15 @@ void MeshClass::Render(ID3D11DeviceContext* deviceContext, ID3D11DepthStencilVie
 	deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	deviceContext->IASetIndexBuffer(indexBuffer, DXGI_FORMAT_R32_UINT, 0);
 
-	deviceContext->RSSetState(p_rsWireframe);
+	//deviceContext->RSSetState(p_rsWireframe);
 	deviceContext->Draw(meshes[0].verts.size(), 0);
 	deviceContext->RSSetState(p_rsSolid);
 	
 	KeyFrame keyframe = interp.Process(delta);
-	
-	if (keyframe.GetKeyTime() != old->GetKeyTime())
+
+	for (UINT i = 0; i < keyframe.bones.size(); i++)
 	{
-		for (UINT i = 0; i < keyframe.bones.size(); i++)
-		{
-			XMStoreFloat4x4(&boneSpheres[i]->worldMatrix.objectMatrix, XMMatrixMultiply(boneScaleMatrix, keyframe.bones[i]));
-		}
+		XMStoreFloat4x4(&boneSpheres[i]->worldMatrix.objectMatrix, XMMatrixMultiply(boneScaleMatrix, keyframe.bones[i]));
 	}
 
 	for (unsigned int i = 0; i < boneSpheres.size(); i++)
@@ -185,11 +183,11 @@ void MeshClass::Shutdown()
 	RELEASE_COM(inputLayout);
 	RELEASE_COM(vertexShader);
 	RELEASE_COM(pixelShader);
-//	RELEASE_COM(texture);
+	//	RELEASE_COM(texture);
 	RELEASE_COM(shaderResourceView);
 	RELEASE_COM(samplerState);
 
-//	p_dsView->Release();
+	//	p_dsView->Release();
 	p_rsSolid->Release();
 	p_rsWireframe->Release();
 }

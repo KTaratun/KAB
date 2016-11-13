@@ -116,7 +116,6 @@ namespace FBXLoader
 	{
 		std::string filename = std::string(_Filename);
 
-
 		// removes the .fbx from the file name
 		filename.pop_back();
 		filename.pop_back();
@@ -581,7 +580,7 @@ namespace FBXLoader
 				int ctrlPointIndex = fbx_mesh->GetPolygonVertex(polyIndex, vertIndex);
 				vert.xyz.x = CPs[ctrlPointIndex].mData[0]; // x
 				vert.xyz.y = CPs[ctrlPointIndex].mData[1]; // y
-				vert.xyz.z = CPs[ctrlPointIndex].mData[2]; // z
+				vert.xyz.z = -CPs[ctrlPointIndex].mData[2]; // z
 
 				int uVIndex = fbx_mesh->GetTextureUVIndex(polyIndex, vertIndex);
 				vert.uvw.x = (float)UVs->GetAt(uVIndex).mData[0]; // u
