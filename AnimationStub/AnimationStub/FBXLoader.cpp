@@ -51,7 +51,7 @@ namespace FBXLoader
 	////////////////////////////////////////////////////////////////////////////
 	bool LoadMesh(FbxMesh* fbx_mesh, Mesh& mesh,
 		std::vector< FbxNode* >& fbx_joints,
-		std::vector< unsigned int >& control_point_indices);
+		std::vector<CtrlPoint*>& cps);
 
 	//////////////////////////////////////////////////////////////////////////////
 	//// GetBindPose:  Get the bind pose transform of a joint.
@@ -73,9 +73,9 @@ namespace FBXLoader
 	//                             parallell arrays.
 	// return:                     True on success, false on failure.
 	////////////////////////////////////////////////////////////////////////////
-	bool LoadSkin(FbxMesh* fbx_mesh, Mesh& mesh, std::vector<TransformNode> &hierarchy,
+	bool LoadSkin(FbxMesh* fbx_mesh, std::vector<TransformNode> &hierarchy,
 		std::vector< FbxNode* >& fbx_joints,
-		std::vector< unsigned int >& control_point_indices);
+		std::vector<CtrlPoint*>& cps);
 
 
 	////////////////////////////////////////////////////////////////////////////
@@ -110,6 +110,9 @@ namespace FBXLoader
 	// [in/out]animation:  The animation to perform key reduction on.
 	////////////////////////////////////////////////////////////////////////////
 	static void KeyReduction(Animation &animation);
+
+	void CalculateTangentBinormal(Vertex vertex1, Vertex vertex2, Vertex vertex3, XMFLOAT3* tangent, XMFLOAT3* binormal);
+	void CalculateNormal(XMFLOAT3 tangent, XMFLOAT3 binormal, XMFLOAT3& normal);
 
 	
 	bool BinaryOut(std::vector<Vertex>&inVertexVector, FbxIOFileHeaderInfo& fileheader, const char* _Filename)
@@ -360,14 +363,14 @@ namespace FBXLoader
 			FbxMesh* mesh_attribute = scene->GetSrcObject< FbxMesh >(i);
 
 			Mesh mesh;
-			std::vector< unsigned int > control_point_indices;
+			std::vector<CtrlPoint*> cps;
 
-			if (LoadMesh(mesh_attribute, mesh, fbx_joints, control_point_indices) == false)
+			if (LoadSkin(mesh_attribute, transformHierarchy, fbx_joints,
+				cps) == false)
 			{
 				return false;
 			}
-			if (LoadSkin(mesh_attribute, mesh, transformHierarchy, fbx_joints, 
-				control_point_indices) == false)
+			if (LoadMesh(mesh_attribute, mesh, fbx_joints, cps) == false)
 			{
 				return false;
 			}
@@ -376,30 +379,30 @@ namespace FBXLoader
 				return false;
 			}
 
-			//meshes.push_back(mesh);
+			meshes.push_back(mesh);
 			//_control_point_indices = control_point_indices;
 
-			std::vector<Vertex> verts;
-			std::vector<unsigned int> ctrl;
-
-			BinaryOut(mesh.verts, *head, fileName.c_str());
-
-			string f = fileName;
-			f.pop_back();
-			f.pop_back();
-			f.pop_back();
-			f.pop_back();
-			f += ".bin";
-			
-			BinaryIn(verts, *head, f.c_str());
-
-			mesh.verts.clear();
-			for (size_t i = 0; i < verts.size(); i++)
-				mesh.verts.push_back(verts[i]);
-
-			Vertex* v = &mesh.verts[92];
-			
-			meshes.push_back(mesh);
+			//std::vector<Vertex> verts;
+			//std::vector<unsigned int> ctrl;
+			//
+			//BinaryOut(mesh.verts, *head, fileName.c_str());
+			//
+			//string f = fileName;
+			//f.pop_back();
+			//f.pop_back();
+			//f.pop_back();
+			//f.pop_back();
+			//f += ".bin";
+			//
+			//BinaryIn(verts, *head, f.c_str());
+			//
+			//mesh.verts.clear();
+			//for (size_t i = 0; i < verts.size(); i++)
+			//	mesh.verts.push_back(verts[i]);
+			//
+			//Vertex* v = &mesh.verts[92];
+			//
+			//meshes.push_back(mesh);
 			//int x = 20;
 		}
 
@@ -553,11 +556,9 @@ namespace FBXLoader
 
 	bool LoadMesh(FbxMesh* fbx_mesh, Mesh& mesh,
 		std::vector< FbxNode* >& fbx_joints,
-		std::vector< unsigned int >& control_point_indices)
+		std::vector<CtrlPoint*>& cps)
 	{
 
-		std::vector<CtrlPoint*> mControlPoints;
-		ProcessControlPoint(fbx_mesh, mControlPoints);
 		FbxVector4* CPs = fbx_mesh->GetControlPoints();
 		FbxLayerElementArrayTemplate<FbxVector2> *UVs;
 		fbx_mesh->GetTextureUV(&UVs);
@@ -581,7 +582,7 @@ namespace FBXLoader
 				int ctrlPointIndex = fbx_mesh->GetPolygonVertex(polyIndex, vertIndex);
 				vert.xyz.x = CPs[ctrlPointIndex].mData[0]; // x
 				vert.xyz.y = CPs[ctrlPointIndex].mData[1]; // y
-				vert.xyz.z = CPs[ctrlPointIndex].mData[2]; // z
+				vert.xyz.z = -CPs[ctrlPointIndex].mData[2]; // z
 
 				int uVIndex = fbx_mesh->GetTextureUVIndex(polyIndex, vertIndex);
 				vert.uvw.x = (float)UVs->GetAt(uVIndex).mData[0]; // u
@@ -597,40 +598,26 @@ namespace FBXLoader
 
 				FbxVector4 normals = normalElement->GetDirectArray().GetAt(normIndex);
 
-				BlendingInfoPrecaution(mControlPoints[vertIndex]);
+				BlendingInfoPrecaution(cps[vertIndex]);
 
-				vert.weights.x = mControlPoints[vertIndex]->blendingInfo[0].blendingWeight;
-				vert.weights.y = mControlPoints[vertIndex]->blendingInfo[1].blendingWeight;
-				vert.weights.z = mControlPoints[vertIndex]->blendingInfo[2].blendingWeight;
-				vert.weights.w = mControlPoints[vertIndex]->blendingInfo[3].blendingWeight;
+				vert.weights.x = cps[vertIndex]->blendingInfo[0].blendingWeight;
+				vert.weights.y = cps[vertIndex]->blendingInfo[1].blendingWeight;
+				vert.weights.z = cps[vertIndex]->blendingInfo[2].blendingWeight;
+				vert.weights.w = cps[vertIndex]->blendingInfo[3].blendingWeight;
 
-				vert.bone.x = mControlPoints[vertIndex]->blendingInfo[0].blendingIndex;
-				vert.bone.y = mControlPoints[vertIndex]->blendingInfo[1].blendingIndex;
-				vert.bone.z = mControlPoints[vertIndex]->blendingInfo[2].blendingIndex;
-				vert.bone.w = mControlPoints[vertIndex]->blendingInfo[3].blendingIndex;
+				vert.bone.x = cps[vertIndex]->blendingInfo[0].blendingIndex;
+				vert.bone.y = cps[vertIndex]->blendingInfo[1].blendingIndex;
+				vert.bone.z = cps[vertIndex]->blendingInfo[2].blendingIndex;
+				vert.bone.w = cps[vertIndex]->blendingInfo[3].blendingIndex;
 
 				vert.normals.x = (float)normals.mData[0];
 				vert.normals.y = (float)normals.mData[1];
-				vert.normals.z = (float)normals.mData[2];
+				vert.normals.z = -(float)normals.mData[2];
 
 				//control_point_indices.push_back(ctrlPointIndex);
 				mesh.verts.push_back(vert);
-
-				//bool found = false;
-				//
-				//for (size_t i = 0; i < mesh.verts.size(); i++)
-				//	if (mesh.verts[i].xyz[0] == vert.xyz[0] && mesh.verts[i].xyz[1] == vert.xyz[1] && mesh.verts[i].xyz[2] == vert.xyz[2])
-				//	{
-				//		found = true;
-				//		control_point_indices.push_back(i);
-				//	}
-				//
-				//if (found == false)
-				//{
-				//	mesh.verts.push_back(vert);
-				//	control_point_indices.push_back(mesh.verts.size() - 1);
-				//}
 			}
+			//CalculateTangentBinormal(mesh.verts[mesh.verts.size - 1], mesh.verts[mesh.verts.size - 2], mesh.verts[mesh.verts.size - 3], )
 		}
 
 		//for (auto itr = mControlPoints.begin(); itr != mControlPoints.end(); ++itr)
@@ -658,31 +645,47 @@ namespace FBXLoader
 
 	}
 
-	bool LoadSkin(FbxMesh* fbx_mesh, Mesh& mesh, std::vector<TransformNode> &hierarchy,
+	bool LoadSkin(FbxMesh* fbx_mesh, std::vector<TransformNode> &hierarchy,
 		std::vector< FbxNode* >& fbx_joints,
-		std::vector< unsigned int >& control_point_indices)
+		std::vector<CtrlPoint*>& cps)
 	{
-		std::vector<CtrlPoint*> cps;
 		ProcessControlPoint(fbx_mesh, cps);
 
-		for (size_t deformerIndex = 0; deformerIndex < fbx_mesh->GetDeformerCount(); deformerIndex++)
+		int deformerCount = fbx_mesh->GetDeformerCount();
+
+		for (size_t deformerIndex = 0; deformerIndex < deformerCount; deformerIndex++)
 		{
 			FbxSkin* currSkin = reinterpret_cast<FbxSkin*>(fbx_mesh->GetDeformer(deformerIndex, FbxDeformer::eSkin));
 
-			for (size_t clusterIndex = 0; clusterIndex < currSkin->GetClusterCount(); clusterIndex++)
+			int clusterCount = currSkin->GetClusterCount();
+
+			for (size_t clusterIndex = 0; clusterIndex < clusterCount; clusterIndex++)
 			{
 				FbxCluster* currCluster = currSkin->GetCluster(clusterIndex);
 				std::string currJointName = currCluster->GetLink()->GetName();
 				unsigned int currJointIndex = FindJointIndex(currJointName, fbx_joints);
 
 				FbxAMatrix bindMatrix = GetBindPose(fbx_joints[currJointIndex], currCluster);
-				XMMATRIX newBind;
+				FbxAMatrix invBind = bindMatrix.Inverse();
+				XMMATRIX newBind, newInv;
 
 				for (size_t i = 0; i < 4; i++)
 					for (size_t j = 0; j < 4; j++)
 						newBind.r[i].m128_f32[j] = bindMatrix.mData[i][j];
+
+				for (size_t i = 0; i < 4; i++)
+					for (size_t j = 0; j < 4; j++)
+						newInv.r[i].m128_f32[j] = invBind.mData[i][j];
+
+				//newBind.r[0].m128_f32[2] *= -1;
+				//newBind.r[1].m128_f32[2] *= -1;
+				//newBind.r[2].m128_f32[0] *= -1;
+				//newBind.r[2].m128_f32[1] *= -1;
+				//newBind.r[2].m128_f32[2] *= -1;
+				//newBind.r[2].m128_f32[3] *= -1;
 				
 				hierarchy[currJointIndex].SetLocal(newBind);
+				hierarchy[currJointIndex].SetInvBind(newInv);
 
 				unsigned int numIndicies = currCluster->GetControlPointIndicesCount();
 				for (size_t i = 0; i < numIndicies; i++)
@@ -694,6 +697,14 @@ namespace FBXLoader
 				}
 			}
 		}
+
+		BlendingIndexWeightPair currBlendingIndexWeightPair;
+		currBlendingIndexWeightPair.blendingIndex = 0;
+		currBlendingIndexWeightPair.blendingWeight = 0;
+		for (int i = 0; i < cps.size(); i++)
+			for (unsigned int j = cps[i]->blendingInfo.size(); j < 4; ++j)
+				cps[i]->blendingInfo.push_back(currBlendingIndexWeightPair);
+
 		return true;
 		return false;
 		/*
@@ -974,5 +985,86 @@ namespace FBXLoader
 		// high you can set that minimum threshold for a particular asset before lost keys cause the 
 		// animation to not look correct. FYI, for rotations with quaternions, keys can typically be
 		// properly interpolated as long as they are under 180 degrees different.
+	}
+
+	void CalculateTangentBinormal(Vertex vertex1, Vertex vertex2, Vertex vertex3, XMFLOAT3* tangent, XMFLOAT3* binormal)
+	{
+
+		float vector1[3];
+		float vector2[3];
+		float tuVector[2];
+		float tvVector[2];
+		float den;
+		float length;
+
+
+		// Calculate the two vectors for this face.
+		vector1[0] = vertex2.xyz.x - vertex1.xyz.x;
+		vector1[1] = vertex2.xyz.y - vertex1.xyz.y;
+		vector1[2] = vertex2.xyz.z - vertex1.xyz.z;
+
+		vector2[0] = vertex3.xyz.x - vertex1.xyz.x;
+		vector2[1] = vertex3.xyz.y - vertex1.xyz.y;
+		vector2[2] = vertex3.xyz.z - vertex1.xyz.z;
+
+		// Calculate the tu and tv texture space vectors.
+		tuVector[0] = vertex2.uvw.x - vertex1.uvw.x;
+		tuVector[1] = vertex2.uvw.y - vertex1.uvw.y;
+		tuVector[2] = vertex2.uvw.z - vertex1.uvw.z;
+
+		tuVector[1] = vertex3.uvw.x - vertex1.uvw.x;
+		tuVector[1] = vertex3.uvw.y - vertex1.uvw.y;
+		tuVector[1] = vertex3.uvw.z - vertex1.uvw.z;
+
+		// Calculate the denominator of the tangent/binormal equation.
+		den = 1.0f / (tuVector[0] * tvVector[1] - tuVector[1] * tvVector[0]);
+
+		// Calculate the cross products and multiply by the coefficient to get the tangent and binormal.
+		tangent->x = (tvVector[1] * vector1[0] - tvVector[0] * vector2[0]) * den;
+		tangent->y = (tvVector[1] * vector1[1] - tvVector[0] * vector2[1]) * den;
+		tangent->z = (tvVector[1] * vector1[2] - tvVector[0] * vector2[2]) * den;
+
+		binormal->x = (tuVector[0] * vector2[0] - tuVector[1] * vector1[0]) * den;
+		binormal->y = (tuVector[0] * vector2[1] - tuVector[1] * vector1[1]) * den;
+		binormal->z = (tuVector[0] * vector2[2] - tuVector[1] * vector1[2]) * den;
+
+		// Calculate the length of this normal.
+		length = sqrt((tangent->x * tangent->x) + (tangent->y * tangent->y) + (tangent->z * tangent->z));
+
+		// Normalize the normal and then store it
+		tangent->x = tangent->x / length;
+		tangent->y = tangent->y / length;
+		tangent->z = tangent->z / length;
+
+		// Calculate the length of this normal.
+		length = sqrt((binormal->x * binormal->x) + (binormal->y * binormal->y) + (binormal->z * binormal->z));
+
+		// Normalize the normal and then store it
+		binormal->x = binormal->x / length;
+		binormal->y = binormal->y / length;
+		binormal->z = binormal->z / length;
+
+		return;
+	}
+
+	void CalculateNormal(XMFLOAT3 tangent, XMFLOAT3 binormal, XMFLOAT3& normal)
+	{
+		float length;
+
+
+		// Calculate the cross product of the tangent and binormal which will give the normal vector.
+		normal.x = (tangent.y * binormal.z) - (tangent.z * binormal.y);
+		normal.y = (tangent.z * binormal.x) - (tangent.x * binormal.z);
+		normal.z = (tangent.x * binormal.y) - (tangent.y * binormal.x);
+
+		// Calculate the length of the normal.
+		length = sqrt((normal.x * normal.x) + (normal.y * normal.y) + (normal.z * normal.z));
+
+		// Normalize the normal.
+		normal.x = normal.x / length;
+		normal.y = normal.y / length;
+		normal.z = normal.z / length;
+
+		return;
 	}
 };

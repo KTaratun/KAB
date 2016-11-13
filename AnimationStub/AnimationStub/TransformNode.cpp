@@ -35,3 +35,13 @@ void TransformNode::AddChild(TransformNode* child)
 {
 	children.push_back(child);
 }
+
+void TransformNode::SetInvBind(const Transform & tran)
+{
+	invBind = tran;
+}
+
+Transform TransformNode::GetInvBind()
+{
+	return invBind;
+}

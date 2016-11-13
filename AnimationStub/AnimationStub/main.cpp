@@ -186,7 +186,7 @@ APP::APP(HINSTANCE hinst, WNDPROC proc)
 	//Create Raster States
 	D3D11_RASTERIZER_DESC rs_solidDescrip;
 	rs_solidDescrip.AntialiasedLineEnable = false;
-	rs_solidDescrip.CullMode = D3D11_CULL_BACK;
+	rs_solidDescrip.CullMode = D3D11_CULL_NONE;
 	rs_solidDescrip.DepthBias = 0;
 	rs_solidDescrip.DepthBiasClamp = 0.0f;
 	rs_solidDescrip.DepthClipEnable = true;

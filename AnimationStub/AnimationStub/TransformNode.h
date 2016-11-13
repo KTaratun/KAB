@@ -44,6 +44,8 @@ public:
 	void SetLocal(const Transform &_local);
 	void SetParent(TransformNode* ptr);
 	void AddChild(TransformNode* ptr);
+	void TransformNode::SetInvBind(const Transform & tran);
+	Transform TransformNode::GetInvBind();
 
 private:
 	// The world space transformation for this object. 
@@ -51,6 +53,8 @@ private:
 
 	// The local space transformation for this object
 	Transform local;
+
+	Transform invBind;
 
 	// This nodes parent, null if this node is the root
 	TransformNode *parentPtr;

@@ -25,7 +25,7 @@ void MeshClass::Initialize(ID3D11Device* device)
 	
 	for (UINT i = 0; i < transformHierarchy.size(); i++)
 	{
-	boneMatrices.push_back(transformHierarchy[i].GetLocal());
+		boneMatrices.push_back(transformHierarchy[i].GetLocal());
 	}
 	XMFLOAT4X4 IdentityMatrix =
 	{
@@ -150,19 +150,70 @@ void MeshClass::Render(ID3D11DeviceContext* deviceContext, ID3D11DepthStencilVie
 	deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	deviceContext->IASetIndexBuffer(indexBuffer, DXGI_FORMAT_R32_UINT, 0);
 
-	deviceContext->RSSetState(p_rsWireframe);
+	//deviceContext->RSSetState(p_rsWireframe);
 	deviceContext->Draw(meshes[0].verts.size(), 0);
 	deviceContext->RSSetState(p_rsSolid);
 	
 	KeyFrame keyframe = interp.Process(delta);
+
+	std::vector<XMMATRIX> boneOffsets;
+	std::vector<Vertex> vertOut = meshes[0].verts;
+
+	//for (size_t i = 0; i < transformHierarchy.size(); i++)
+	//{
+	//	XMMATRIX bO = transformHierarchy[i].GetInvBind() * keyframe.bones[i];
+	//	boneOffsets.push_back(bO);
+	//}
+
+	//for (size_t i = 0; i < vertOut.size(); i++)
+	//{
+	//	XMVECTOR vertPos = XMLoadFloat3(&meshes[0].verts[i].xyz);
+	//	XMVECTOR bO = vertPos;
+	//	bO.m128_f32[0] *= 1.5;
+	//	XMStoreFloat3(&vertOut[i].xyz, bO);
+	//
+	//}
+
+	//for (size_t i = 0; i < vertOut.size(); i++)
+	//{
+	//	XMVECTOR vertPos = XMLoadFloat3(&meshes[0].verts[i].xyz);
+	//	XMVECTOR tempVert;
+	//	tempVert = boneOffsets[vertOut[i].bone.x].r[3] * vertPos * meshes[0].verts[i].weights.x;
+	//	tempVert += boneOffsets[vertOut[i].bone.y].r[3] * vertPos * meshes[0].verts[i].weights.y;
+	//	tempVert += boneOffsets[vertOut[i].bone.z].r[3] * vertPos * meshes[0].verts[i].weights.z;
+	//	tempVert += boneOffsets[vertOut[i].bone.w].r[3] * vertPos * meshes[0].verts[i].weights.w
+	//	
+	//	XMStoreFloat3(&vertOut[i].xyz, tempVert);
+	//}
 	
-	if (keyframe.GetKeyTime() != old->GetKeyTime())
-	{
-		for (UINT i = 0; i < keyframe.bones.size(); i++)
-		{
-			XMStoreFloat4x4(&boneSpheres[i]->worldMatrix.objectMatrix, XMMatrixMultiply(boneScaleMatrix, keyframe.bones[i]));
-		}
-	}
+	//for (size_t i = 0; i < meshes[0].verts.size(); i++)
+	//{
+	//	XMVECTOR vertPos = XMLoadFloat3(&meshes[0].verts[i].xyz);
+	//	XMVECTOR tempVert;
+	//	tempVert = boneOffsets[meshes[0].verts[i].bone.x].r[3] * vertPos;
+	//	tempVert *= meshes[0].verts[i].weights.x;
+	//	tempVert+= boneOffsets[meshes[0].verts[i].bone.y].r[3] * vertPos * meshes[0].verts[i].weights.y;
+	//	tempVert+= boneOffsets[meshes[0].verts[i].bone.z].r[3] * vertPos * meshes[0].verts[i].weights.z;
+	//	tempVert+= boneOffsets[meshes[0].verts[i].bone.w].r[3] * vertPos * meshes[0].verts[i].weights.w;
+	//	XMStoreFloat3(&vertOut[i].xyz, tempVert);
+	//}
+
+	//D3D11_BUFFER_DESC vertexBufferDesc;
+	//ZeroMemory(&vertexBufferDesc, sizeof(vertexBufferDesc));
+	//vertexBufferDesc.Usage = D3D11_USAGE_IMMUTABLE;
+	//vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	//vertexBufferDesc.CPUAccessFlags = NULL;
+	//vertexBufferDesc.ByteWidth = sizeof(Vertex) * meshes[0].verts.size();
+	//vertexBufferDesc.MiscFlags = 0;
+	//
+	//D3D11_SUBRESOURCE_DATA initialDataVertex;
+	//initialDataVertex.pSysMem = vertOut.data();
+	//
+	//HRESULT hr;
+	//hr = device->CreateBuffer(&vertexBufferDesc, &initialDataVertex, &vertexBuffer);
+	
+	for (UINT i = 0; i < keyframe.bones.size(); i++)
+		XMStoreFloat4x4(&boneSpheres[i]->worldMatrix.objectMatrix, XMMatrixMultiply(boneScaleMatrix, keyframe.bones[i]));
 
 	for (unsigned int i = 0; i < boneSpheres.size(); i++)
 	{
