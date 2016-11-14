@@ -1,6 +1,4 @@
 #include "modelClass.h"
-#include "OBJ_VS.csh"
-#include "OBJ_PS.csh"
 
 
 

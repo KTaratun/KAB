@@ -24,6 +24,8 @@ KeyFrame Interpolator::Process(float time) // time should be added
 	// You set the animation pointer, right?
 	//assert(animPtr);
 
+	//return *animPtr->keyFrames[0];
+
 	if (currentFrame == NULL)
 		currentFrame = animPtr->keyFrames[0];
 	

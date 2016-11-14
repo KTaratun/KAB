@@ -1,5 +1,7 @@
 #include "stdafx.h"
 #include "cubeModel.h"
+#include "OBJ_VS.csh"
+#include "OBJ_PS.csh"
 
 void CubeModel::Initialize(ID3D11Device* device)
 {

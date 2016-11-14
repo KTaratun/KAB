@@ -1,5 +1,9 @@
 #include "stdafx.h"
 #include "boxBind.h"
+#include "FBX_VS.csh"
+#include "FBX_PS.csh"
+#include "Bone_VS.csh"
+#include "Bone_PS.csh"
 #define DIFFUSE 1
 #define SPECULAR 0
 #define NORMAL 0
@@ -19,21 +23,22 @@ void MeshClass::Initialize(ID3D11Device* device)
 	rs_solidDescrip.SlopeScaledDepthBias = 0.0f;
 
 	D3D11_RASTERIZER_DESC rs_wireframeDescrip = rs_solidDescrip;
-	rs_wireframeDescrip.FillMode = D3D11_FILL_WIREFRAME;
+	//rs_wireframeDescrip.FillMode = D3D11_FILL_WIREFRAME;
 
 	device->CreateRasterizerState(&rs_solidDescrip, &p_rsSolid);
 	device->CreateRasterizerState(&rs_wireframeDescrip, &p_rsWireframe);
-
-	FBXLoader::Load("Death.fbx", meshes, transformHierarchy, animation, texture_name);
+	
+	//FBXLoader::Load("Death.fbx", meshes, transformHierarchy, animations, texture_name);
 	//Mesh mOne, mTwo;
 	//Animation aOne, aTwo;
 	//TransformNode tOne, tTwo;
 
 	std::vector<TransformNode> tn;
 	std::vector<Mesh> m;
+	string a;
 
-	FBXLoader::Load("Box_Idle.fbx", meshes, transformHierarchy, animations); // all bones from both .fbxs are being concatenated
-	FBXLoader::Load("Box_Jump.fbx", m, tn, animations); // tn is literally doing nothing
+	FBXLoader::Load("Box_Idle.fbx", meshes, transformHierarchy, animations, a); // all bones from both .fbxs are being concatenated
+	FBXLoader::Load("Box_Jump.fbx", m, tn, animations, a); // tn is literally doing nothing
 	
 	for (UINT i = 0; i < transformHierarchy.size(); i++)
 	{
@@ -93,7 +98,7 @@ void MeshClass::Initialize(ID3D11Device* device)
 
 	device->CreateBuffer(&objectConstantBufferDesc, NULL, &constantBuffer);
 
-	CreateDDSTextureFromFile(device, L"PPG_3D_Player_D.dds", nullptr, &shaderResourceView);
+	CreateDDSTextureFromFile(device, L"TestCube.dds", nullptr, &shaderResourceView);
 	//const wchar_t* tex = (const wchar_t*)texture_name.c_str();
 	//CreateWICTextureFromFile(device, tex, nullptr, &shaderResourceView);
 
@@ -175,11 +180,11 @@ void MeshClass::Render(ID3D11DeviceContext* deviceContext, ID3D11DepthStencilVie
 	std::vector<Vertex> vertOut = meshes[0].verts;
 
 	// SETTING UP BONE OFFSETS
-	//for (size_t i = 0; i < transformHierarchy.size(); i++)
-	//{
-	//	XMMATRIX bO = transformHierarchy[i].GetInvBind() * keyframe.bones[i];
-	//	boneOffsets.push_back(bO);
-	//}
+	for (size_t i = 0; i < transformHierarchy.size(); i++)
+	{
+		XMMATRIX bO = transformHierarchy[i].GetInvBind() * keyframe.bones[i];
+		boneOffsets.push_back(bO);
+	}
 
 	// EXPERIMENTING WITH UPDATING VERTICIES
 	//for (size_t i = 0; i < vertOut.size(); i++)
@@ -193,17 +198,18 @@ void MeshClass::Render(ID3D11DeviceContext* deviceContext, ID3D11DepthStencilVie
 	//}
 
 	// ROUGHLY MATH FOR SMOOTH SKINNING
-	//for (size_t i = 0; i < vertOut.size(); i++)
-	//{
-	//	XMVECTOR vertPos = XMLoadFloat3(&meshes[0].verts[i].xyz);
-	//	XMVECTOR tempVert;
-	//	tempVert = boneOffsets[vertOut[i].bone.x].r[3] * vertPos * meshes[0].verts[i].weights.x;
-	//	tempVert += boneOffsets[vertOut[i].bone.y].r[3] * vertPos * meshes[0].verts[i].weights.y;
-	//	tempVert += boneOffsets[vertOut[i].bone.z].r[3] * vertPos * meshes[0].verts[i].weights.z;
-	//	tempVert += boneOffsets[vertOut[i].bone.w].r[3] * vertPos * meshes[0].verts[i].weights.w
-	//	
-	//	XMStoreFloat3(&vertOut[i].xyz, tempVert);
-	//}
+	for (size_t i = 0; i < vertOut.size(); i++)
+	{
+		
+		XMVECTOR vertPos = XMVectorSet(meshes[0].verts[i].xyz.x, meshes[0].verts[i].xyz.y, meshes[0].verts[i].xyz.z, 1.f);// = XMLoadFloat3(&meshes[0].verts[i].xyz);
+		XMVECTOR tempVert;
+		tempVert = XMVector4Transform(vertPos, boneOffsets[vertOut[i].bone.x]) * meshes[0].verts[i].weights.x;
+		tempVert += XMVector4Transform(vertPos, boneOffsets[vertOut[i].bone.y]) * meshes[0].verts[i].weights.y;
+		tempVert += XMVector4Transform(vertPos, boneOffsets[vertOut[i].bone.z]) * meshes[0].verts[i].weights.z;
+		tempVert += XMVector4Transform(vertPos, boneOffsets[vertOut[i].bone.w]) * meshes[0].verts[i].weights.w;
+		
+		XMStoreFloat3(&vertOut[i].xyz, tempVert);
+	}
 	
 	// ANOTHER ATTEMPT AT SMOOTH SKINNING
 	//for (size_t i = 0; i < meshes[0].verts.size(); i++)
@@ -219,19 +225,19 @@ void MeshClass::Render(ID3D11DeviceContext* deviceContext, ID3D11DepthStencilVie
 	//}
 
 	// RESETTING VERTEX BUFFER
-	//D3D11_BUFFER_DESC vertexBufferDesc;
-	//ZeroMemory(&vertexBufferDesc, sizeof(vertexBufferDesc));
-	//vertexBufferDesc.Usage = D3D11_USAGE_IMMUTABLE;
-	//vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-	//vertexBufferDesc.CPUAccessFlags = NULL;
-	//vertexBufferDesc.ByteWidth = sizeof(Vertex) * meshes[0].verts.size();
-	//vertexBufferDesc.MiscFlags = 0;
-	//
-	//D3D11_SUBRESOURCE_DATA initialDataVertex;
-	//initialDataVertex.pSysMem = vertOut.data();
-	//
-	//HRESULT hr;
-	//hr = device->CreateBuffer(&vertexBufferDesc, &initialDataVertex, &vertexBuffer);
+	D3D11_BUFFER_DESC vertexBufferDesc;
+	ZeroMemory(&vertexBufferDesc, sizeof(vertexBufferDesc));
+	vertexBufferDesc.Usage = D3D11_USAGE_IMMUTABLE;
+	vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	vertexBufferDesc.CPUAccessFlags = NULL;
+	vertexBufferDesc.ByteWidth = sizeof(Vertex) * meshes[0].verts.size();
+	vertexBufferDesc.MiscFlags = 0;
+	
+	D3D11_SUBRESOURCE_DATA initialDataVertex;
+	initialDataVertex.pSysMem = vertOut.data();
+	
+	HRESULT hr;
+	hr = device->CreateBuffer(&vertexBufferDesc, &initialDataVertex, &vertexBuffer);
 
 	// SWITCHING ANIMATION
 	if (GetAsyncKeyState(VK_TAB) && pressed != true)

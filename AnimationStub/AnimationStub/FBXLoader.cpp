@@ -268,7 +268,7 @@ namespace FBXLoader
 		// hierarchy, you may only need the root instead of a list of all nodes.
 		std::vector<TransformNode> &transformHierarchy,
 		// [out] The loaded animation
-		Animation &animation,
+		std::vector<Animation> &animation,
 		std::string & textureName
 	)
 	{
@@ -578,6 +578,8 @@ namespace FBXLoader
 		{
 			int vertCount = fbx_mesh->GetPolygonSize(polyIndex);
 
+			// get vertices reordered "
+
 			for (size_t vertIndex = 0; vertIndex < vertCount; vertIndex++)
 			{
 				int ctrlPointIndex = fbx_mesh->GetPolygonVertex(polyIndex, vertIndex);
@@ -705,12 +707,12 @@ namespace FBXLoader
 					for (size_t j = 0; j < 4; j++)
 						newInv.r[i].m128_f32[j] = invBind.mData[i][j];
 
-				//newBind.r[0].m128_f32[2] *= -1;
-				//newBind.r[1].m128_f32[2] *= -1;
-				//newBind.r[2].m128_f32[0] *= -1;
-				//newBind.r[2].m128_f32[1] *= -1;
-				//newBind.r[2].m128_f32[2] *= -1;
-				//newBind.r[2].m128_f32[3] *= -1;
+				newBind.r[0].m128_f32[2] *= -1;
+				newBind.r[1].m128_f32[2] *= -1;
+				newBind.r[2].m128_f32[0] *= -1;
+				newBind.r[2].m128_f32[1] *= -1;
+				newBind.r[2].m128_f32[3] *= -1;
+				newBind.r[3].m128_f32[3] *= -1;
 
 				hierarchy[currJointIndex].SetLocal(newBind);
 				hierarchy[currJointIndex].SetInvBind(newInv);
@@ -888,12 +890,11 @@ namespace FBXLoader
 				FbxAMatrix geometryTransform = GetGeometryTransformation(fbx_joints[j]);
 				FbxAMatrix currentTransformOffset = fbx_joints[j]->EvaluateGlobalTransform(currTime) * geometryTransform;
 
-				//currentTransformOffset.mData[0][2] *= -1;
-				//currentTransformOffset.mData[1][2] *= -1;
-				//currentTransformOffset.mData[2][0] *= -1;
-				//currentTransformOffset.mData[2][1] *= -1;
-				//currentTransformOffset.mData[2][2] *= -1;
-				//currentTransformOffset.mData[2][3] *= -1;
+				currentTransformOffset.mData[0][2] *= -1;
+				currentTransformOffset.mData[1][2] *= -1;
+				currentTransformOffset.mData[2][0] *= -1;
+				currentTransformOffset.mData[2][1] *= -1;
+				currentTransformOffset.mData[2][3] *= -1;
 				currentTransformOffset.mData[3][2] *= -1;
 
 				//currentTransformOffset *= *geometryTransform;

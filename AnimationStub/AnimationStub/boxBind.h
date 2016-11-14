@@ -8,10 +8,6 @@
 #pragma comment(lib,"d3d11.lib")
 #include <vector>
 #include <stdio.h>
-#include "FBX_VS.csh"
-#include "FBX_PS.csh"
-#include "Bone_VS.csh"
-#include "Bone_PS.csh"
 #include "modelClass.h"
 
 using namespace DirectX;
