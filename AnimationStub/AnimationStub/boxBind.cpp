@@ -21,7 +21,15 @@ void MeshClass::Initialize(ID3D11Device* device)
 	device->CreateRasterizerState(&rs_solidDescrip, &p_rsSolid);
 	device->CreateRasterizerState(&rs_wireframeDescrip, &p_rsWireframe);
 
-	FBXLoader::Load("Box_Idle.fbx", meshes, transformHierarchy, animation);
+	//Mesh mOne, mTwo;
+	//Animation aOne, aTwo;
+	//TransformNode tOne, tTwo;
+
+	std::vector<TransformNode> tn;
+	std::vector<Mesh> m;
+
+	FBXLoader::Load("Box_Idle.fbx", meshes, transformHierarchy, animations); // all bones from both .fbxs are being concatenated
+	FBXLoader::Load("Box_Jump.fbx", m, tn, animations); // tn is literally doing nothing
 	
 	for (UINT i = 0; i < transformHierarchy.size(); i++)
 	{
@@ -35,8 +43,8 @@ void MeshClass::Initialize(ID3D11Device* device)
 		0, 0, 0, 1
 	};
 	
-	interp.SetAnimPtr(&animation);
-
+	interp.SetAnimPtr(&animations[0]);
+	//interp.SetAnimPtr(&animations[1], 1);
 
 	worldMatrix.objectMatrix = IdentityMatrix;
 
@@ -150,30 +158,35 @@ void MeshClass::Render(ID3D11DeviceContext* deviceContext, ID3D11DepthStencilVie
 	deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	deviceContext->IASetIndexBuffer(indexBuffer, DXGI_FORMAT_R32_UINT, 0);
 
-	//deviceContext->RSSetState(p_rsWireframe);
+	deviceContext->RSSetState(p_rsWireframe);
 	deviceContext->Draw(meshes[0].verts.size(), 0);
 	deviceContext->RSSetState(p_rsSolid);
 	
+	// KEYFRAME INTERPOLATION
 	KeyFrame keyframe = interp.Process(delta);
 
 	std::vector<XMMATRIX> boneOffsets;
 	std::vector<Vertex> vertOut = meshes[0].verts;
 
+	// SETTING UP BONE OFFSETS
 	//for (size_t i = 0; i < transformHierarchy.size(); i++)
 	//{
 	//	XMMATRIX bO = transformHierarchy[i].GetInvBind() * keyframe.bones[i];
 	//	boneOffsets.push_back(bO);
 	//}
 
+	// EXPERIMENTING WITH UPDATING VERTICIES
 	//for (size_t i = 0; i < vertOut.size(); i++)
 	//{
 	//	XMVECTOR vertPos = XMLoadFloat3(&meshes[0].verts[i].xyz);
-	//	XMVECTOR bO = vertPos;
-	//	bO.m128_f32[0] *= 1.5;
+	//	//XMVECTOR bO = boneOffsets[meshes[0].verts[i].bone.x].r[3] * vertPos;
+	//	XMVECTOR bO = transformHierarchy[meshes[0].verts[i].bone.x].GetInvBind().r[3] * keyframe.bones[meshes[0].verts[i].bone.x].r[3] * vertPos;
+	//	//bO.m128_f32[0] *= 1.5;
 	//	XMStoreFloat3(&vertOut[i].xyz, bO);
 	//
 	//}
 
+	// ROUGHLY MATH FOR SMOOTH SKINNING
 	//for (size_t i = 0; i < vertOut.size(); i++)
 	//{
 	//	XMVECTOR vertPos = XMLoadFloat3(&meshes[0].verts[i].xyz);
@@ -186,6 +199,7 @@ void MeshClass::Render(ID3D11DeviceContext* deviceContext, ID3D11DepthStencilVie
 	//	XMStoreFloat3(&vertOut[i].xyz, tempVert);
 	//}
 	
+	// ANOTHER ATTEMPT AT SMOOTH SKINNING
 	//for (size_t i = 0; i < meshes[0].verts.size(); i++)
 	//{
 	//	XMVECTOR vertPos = XMLoadFloat3(&meshes[0].verts[i].xyz);
@@ -198,6 +212,7 @@ void MeshClass::Render(ID3D11DeviceContext* deviceContext, ID3D11DepthStencilVie
 	//	XMStoreFloat3(&vertOut[i].xyz, tempVert);
 	//}
 
+	// RESETTING VERTEX BUFFER
 	//D3D11_BUFFER_DESC vertexBufferDesc;
 	//ZeroMemory(&vertexBufferDesc, sizeof(vertexBufferDesc));
 	//vertexBufferDesc.Usage = D3D11_USAGE_IMMUTABLE;
@@ -211,16 +226,30 @@ void MeshClass::Render(ID3D11DeviceContext* deviceContext, ID3D11DepthStencilVie
 	//
 	//HRESULT hr;
 	//hr = device->CreateBuffer(&vertexBufferDesc, &initialDataVertex, &vertexBuffer);
+
+	// SWITCHING ANIMATION
+	if (GetAsyncKeyState(VK_TAB) && pressed != true)
+	{
+		pressed = true;
+		//interp.SWITCH = true;
+		if (interp.GetAnimPtr() == &animations[0])
+			//interp.SwitchAnimation(&animations[1]);
+			interp.SetAnimPtr(&animations[1]);
+		else
+			//interp.SwitchAnimation(&animations[0]);
+			interp.SetAnimPtr(&animations[0]);
+	}
 	
+	if (!GetAsyncKeyState(VK_TAB))
+		pressed = false;
+	
+	// UPDATING BONE DATA
 	for (UINT i = 0; i < keyframe.bones.size(); i++)
 		XMStoreFloat4x4(&boneSpheres[i]->worldMatrix.objectMatrix, XMMatrixMultiply(boneScaleMatrix, keyframe.bones[i]));
 
+	// RENDER BONES
 	for (unsigned int i = 0; i < boneSpheres.size(); i++)
-	{
 		boneSpheres[i]->Render(deviceContext, delta);
-	}
-
-	*old = keyframe;
 }
 
 void MeshClass::Shutdown()

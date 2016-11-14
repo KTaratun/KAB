@@ -32,7 +32,7 @@ class MeshClass
 {
 	std::vector<Mesh> meshes;
 	std::vector<TransformNode> transformHierarchy;
-	Animation animation;
+	std::vector<Animation> animations;
 	std::vector< unsigned int > control_point_indices;
 	std::vector<BoneSphere*> boneSpheres;
 	std::vector<XMMATRIX> boneMatrices;
@@ -80,5 +80,6 @@ public:
 	void Initialize(ID3D11Device* device);
 	void Render(ID3D11DeviceContext* deviceContext, ID3D11DepthStencilView* p_dsView, ID3D11Device* device, float delta);
 	void Shutdown();
+	bool pressed = false;
 	//bool loadOBJ(const char* _path, vector<OBJ_VERT>& out_vertices, vector<UINT>& out_indices);
 };

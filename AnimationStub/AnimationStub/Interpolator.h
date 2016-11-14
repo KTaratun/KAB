@@ -11,10 +11,13 @@ public:
 	inline void AddTime(float timeToAdd) { currentTime += timeToAdd; }
 	inline void SetTime(float _currentTime) { currentTime = _currentTime; }
 	inline void SetAnimPtr(Animation *aP) { animPtr = aP; }
+	inline Animation* GetAnimPtr() { return animPtr; }
 	KeyFrame Interpolate(KeyFrame* current, KeyFrame* next, float delta);
+	KeyFrame SwitchAnimation(Animation *ani2);
 
 	// Creates the "betweenKeyFrame" data based on the animation and currentTime elements
 	KeyFrame Process(float time);
+	//bool SWITCH = false;
 
 private:
 	float currentTime;
@@ -22,7 +25,7 @@ private:
 	KeyFrame* currentFrame;
 
 	// The animation this interpolator is interpolating
-	Animation *animPtr;
+	Animation *animPtr;//, *animPtr2;
 
 	// The result of the interpolation, if not using channels
 	KeyFrame betweenKeyFrame;

@@ -268,7 +268,7 @@ namespace FBXLoader
 		// hierarchy, you may only need the root instead of a list of all nodes.
 		std::vector<TransformNode> &transformHierarchy,
 		// [out] The loaded animation
-		Animation &animation)
+		std::vector<Animation> &animation)
 	{
 		// Get an FBX manager
 		FbxManager* manager = FbxManager::Create();
@@ -405,7 +405,7 @@ namespace FBXLoader
 			//meshes.push_back(mesh);
 			//int x = 20;
 		}
-
+		Animation ani;
 		// Get the number of animation stacks
 		int num_anim_stacks = scene->GetSrcObjectCount< FbxAnimStack >();
 		
@@ -414,21 +414,20 @@ namespace FBXLoader
 		{
 			// Get the current animation stack
 			anim_stack = scene->GetSrcObject< FbxAnimStack >(i);
-
-			
 		
 			FbxString animStackName = anim_stack->GetName();
-			animation.SetName(animStackName.Buffer());
+			ani.SetName(animStackName.Buffer());
 		
-			if (LoadAnimation(anim_stack, transformHierarchy, animation, fbx_joints, scene) == false)
+			if (LoadAnimation(anim_stack, transformHierarchy, ani, fbx_joints, scene) == false)
 			{
 				return false;
 			}
 		}
 
 		// Perform key reduction on the animation
-		KeyReduction(animation);
+		KeyReduction(ani);
 
+		animation.push_back(ani);
 		return true;
 	}
 
@@ -600,15 +599,16 @@ namespace FBXLoader
 
 				BlendingInfoPrecaution(cps[vertIndex]);
 
-				vert.weights.x = cps[vertIndex]->blendingInfo[0].blendingWeight;
-				vert.weights.y = cps[vertIndex]->blendingInfo[1].blendingWeight;
-				vert.weights.z = cps[vertIndex]->blendingInfo[2].blendingWeight;
-				vert.weights.w = cps[vertIndex]->blendingInfo[3].blendingWeight;
+				//fbx_mesh->GetCon
+				vert.weights.x = cps[ctrlPointIndex]->blendingInfo[0].blendingWeight;
+				vert.weights.y = cps[ctrlPointIndex]->blendingInfo[1].blendingWeight;
+				vert.weights.z = cps[ctrlPointIndex]->blendingInfo[2].blendingWeight;
+				vert.weights.w = cps[ctrlPointIndex]->blendingInfo[3].blendingWeight;
 
-				vert.bone.x = cps[vertIndex]->blendingInfo[0].blendingIndex;
-				vert.bone.y = cps[vertIndex]->blendingInfo[1].blendingIndex;
-				vert.bone.z = cps[vertIndex]->blendingInfo[2].blendingIndex;
-				vert.bone.w = cps[vertIndex]->blendingInfo[3].blendingIndex;
+				vert.bone.x = cps[ctrlPointIndex]->blendingInfo[0].blendingIndex;
+				vert.bone.y = cps[ctrlPointIndex]->blendingInfo[1].blendingIndex;
+				vert.bone.z = cps[ctrlPointIndex]->blendingInfo[2].blendingIndex;
+				vert.bone.w = cps[ctrlPointIndex]->blendingInfo[3].blendingIndex;
 
 				vert.normals.x = (float)normals.mData[0];
 				vert.normals.y = (float)normals.mData[1];
@@ -688,6 +688,7 @@ namespace FBXLoader
 				hierarchy[currJointIndex].SetInvBind(newInv);
 
 				unsigned int numIndicies = currCluster->GetControlPointIndicesCount();
+				int* ind = currCluster->GetControlPointIndices();
 				for (size_t i = 0; i < numIndicies; i++)
 				{
 					BlendingIndexWeightPair currBlendingIndexWeightPair;
