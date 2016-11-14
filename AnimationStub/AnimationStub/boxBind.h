@@ -4,6 +4,7 @@
 #include <d3d11.h>
 #include <DirectXMath.h>
 #include "DDSTextureLoader.h"
+#include "WICTextureLoader.h"
 #pragma comment(lib,"d3d11.lib")
 #include <vector>
 #include <stdio.h>
@@ -33,6 +34,7 @@ class MeshClass
 	std::vector<Mesh> meshes;
 	std::vector<TransformNode> transformHierarchy;
 	std::vector<Animation> animations;
+	std::string texture_name;
 	std::vector< unsigned int > control_point_indices;
 	std::vector<BoneSphere*> boneSpheres;
 	std::vector<XMMATRIX> boneMatrices;
@@ -40,9 +42,9 @@ class MeshClass
 	KeyFrame* old = new KeyFrame();
 	XMMATRIX boneScaleMatrix =
 	{
-		0.25f, 0, 0, 0,
-		0, 0.25f, 0, 0,
-		0, 0, 0.25f, 0,
+		0.1f, 0, 0, 0,
+		0, 0.1f, 0, 0,
+		0, 0, 0.1f, 0,
 		0, 0, 0, 1
 	};
 protected:

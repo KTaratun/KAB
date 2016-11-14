@@ -1,5 +1,8 @@
 #include "stdafx.h"
 #include "boxBind.h"
+#define DIFFUSE 1
+#define SPECULAR 0
+#define NORMAL 0
 
 void MeshClass::Initialize(ID3D11Device* device)
 {
@@ -21,6 +24,7 @@ void MeshClass::Initialize(ID3D11Device* device)
 	device->CreateRasterizerState(&rs_solidDescrip, &p_rsSolid);
 	device->CreateRasterizerState(&rs_wireframeDescrip, &p_rsWireframe);
 
+	FBXLoader::Load("Death.fbx", meshes, transformHierarchy, animation, texture_name);
 	//Mesh mOne, mTwo;
 	//Animation aOne, aTwo;
 	//TransformNode tOne, tTwo;
@@ -89,7 +93,9 @@ void MeshClass::Initialize(ID3D11Device* device)
 
 	device->CreateBuffer(&objectConstantBufferDesc, NULL, &constantBuffer);
 
-	CreateDDSTextureFromFile(device, L"TestCube.dds", nullptr, &shaderResourceView);
+	CreateDDSTextureFromFile(device, L"PPG_3D_Player_D.dds", nullptr, &shaderResourceView);
+	//const wchar_t* tex = (const wchar_t*)texture_name.c_str();
+	//CreateWICTextureFromFile(device, tex, nullptr, &shaderResourceView);
 
 	D3D11_SAMPLER_DESC samplerDesc;
 	ZeroMemory(&samplerDesc, sizeof(samplerDesc));

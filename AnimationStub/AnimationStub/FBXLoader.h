@@ -18,6 +18,7 @@ namespace FBXLoader
 		// hierarchy, you may only need the root instead of a list of all nodes.
 		std::vector<TransformNode> &transformHierarchy,
 		// [out] The loaded animation
-		std::vector<Animation> &animation);
+		Animation &animation,
+		std::string &textureName);
 };
 

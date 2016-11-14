@@ -149,11 +149,10 @@ APP::APP(HINSTANCE hinst, WNDPROC proc)
 	m4x4_camTranslate = m4x4_Identity;
 
 	//Lights
-	light_data.diffuse_ambientLight = { 0.2f,0.2f,0.2f,1.0f };
+	light_data.diffuse_ambientLight = { 0.2f,0.2f,0.2f,1 };
 
 	light_data.diffuse_spotLight = { 1,1,1,1 };
-	light_data.position_spotLight = { -6, 4, 4, 1 };
-	light_data.direction_spotLight = { 0.75,-0.75f,-0.75f,1 };
+
 	light_data.ratio_spotLight = 0.93f;
 
 	//Swapchain Descriptor
@@ -417,6 +416,9 @@ bool APP::Run()
 
 		XMStoreFloat4x4(&m4x4_camera, cameraMat);
 	}
+	XMMATRIX cameraMat = XMLoadFloat4x4(&m4x4_camera);
+	light_data.position_spotLight = { cameraMat.r[3].m128_f32[0], cameraMat.r[3].m128_f32[1], cameraMat.r[3].m128_f32[2], 1 };
+	light_data.direction_spotLight = { cameraMat.r[2].m128_f32[0], cameraMat.r[2].m128_f32[1], cameraMat.r[2].m128_f32[2],1 };
 
 	//LPPOINT m = &mouse;
 	//GetCursorPos(m);
