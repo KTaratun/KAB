@@ -1,11 +1,14 @@
 #include "stdafx.h"
 #include "boxBind.h"
+#define DIFFUSE 1
+#define SPECULAR 0
+#define NORMAL 0
 
 void MeshClass::Initialize(ID3D11Device* device)
 {
 	D3D11_RASTERIZER_DESC rs_solidDescrip;
 	rs_solidDescrip.AntialiasedLineEnable = false;
-	rs_solidDescrip.CullMode = D3D11_CULL_NONE;
+	rs_solidDescrip.CullMode = D3D11_CULL_BACK;
 	rs_solidDescrip.DepthBias = 0;
 	rs_solidDescrip.DepthBiasClamp = 0.0f;
 	rs_solidDescrip.DepthClipEnable = true;
@@ -21,13 +24,12 @@ void MeshClass::Initialize(ID3D11Device* device)
 	device->CreateRasterizerState(&rs_solidDescrip, &p_rsSolid);
 	device->CreateRasterizerState(&rs_wireframeDescrip, &p_rsWireframe);
 
-	FBXLoader::Load("Box_Jump.fbx", meshes, transformHierarchy, animation);
-
+	FBXLoader::Load("Death.fbx", meshes, transformHierarchy, animation, texture_name);
+	
 	for (UINT i = 0; i < transformHierarchy.size(); i++)
 	{
 		boneMatrices.push_back(transformHierarchy[i].GetLocal());
 	}
-
 	XMFLOAT4X4 IdentityMatrix =
 	{
 		1, 0, 0, 0,
@@ -35,9 +37,8 @@ void MeshClass::Initialize(ID3D11Device* device)
 		0, 0, 1, 0,
 		0, 0, 0, 1
 	};
-
+	
 	interp.SetAnimPtr(&animation);
-
 
 	worldMatrix.objectMatrix = IdentityMatrix;
 
@@ -82,7 +83,9 @@ void MeshClass::Initialize(ID3D11Device* device)
 
 	device->CreateBuffer(&objectConstantBufferDesc, NULL, &constantBuffer);
 
-	CreateDDSTextureFromFile(device, L"TestCube.dds", nullptr, &shaderResourceView);
+	CreateDDSTextureFromFile(device, L"PPG_3D_Player_D.dds", nullptr, &shaderResourceView);
+	//const wchar_t* tex = (const wchar_t*)texture_name.c_str();
+	//CreateWICTextureFromFile(device, tex, nullptr, &shaderResourceView);
 
 	D3D11_SAMPLER_DESC samplerDesc;
 	ZeroMemory(&samplerDesc, sizeof(samplerDesc));
@@ -114,14 +117,14 @@ void MeshClass::Initialize(ID3D11Device* device)
 	objMat = XMMatrixMultiply(scaleMat, objMat);
 
 	XMStoreFloat4x4(&worldMatrix.objectMatrix, objMat);
-
+	
 	for (UINT i = 0; i < boneMatrices.size(); i++)
 	{
 		newboneSphere = new BoneSphere;
 		newboneSphere->Initialize(device, boneMatrices[i]);
 		boneSpheres.push_back(newboneSphere);
 	}
-	//delete newboneSphere;
+		//delete newboneSphere;
 
 }
 
@@ -157,10 +160,11 @@ void MeshClass::Render(ID3D11DeviceContext* deviceContext, ID3D11DepthStencilVie
 	
 	KeyFrame keyframe = interp.Process(delta);
 
+	std::vector<XMMATRIX> boneOffsets;
+	std::vector<Vertex> vertOut = meshes[0].verts;
+	
 	for (UINT i = 0; i < keyframe.bones.size(); i++)
-	{
 		XMStoreFloat4x4(&boneSpheres[i]->worldMatrix.objectMatrix, XMMatrixMultiply(boneScaleMatrix, keyframe.bones[i]));
-	}
 
 	for (unsigned int i = 0; i < boneSpheres.size(); i++)
 	{
@@ -183,11 +187,11 @@ void MeshClass::Shutdown()
 	RELEASE_COM(inputLayout);
 	RELEASE_COM(vertexShader);
 	RELEASE_COM(pixelShader);
-	//	RELEASE_COM(texture);
+//	RELEASE_COM(texture);
 	RELEASE_COM(shaderResourceView);
 	RELEASE_COM(samplerState);
 
-	//	p_dsView->Release();
+//	p_dsView->Release();
 	p_rsSolid->Release();
 	p_rsWireframe->Release();
 }

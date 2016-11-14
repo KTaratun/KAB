@@ -191,6 +191,7 @@
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="TransformNode.h" />
+    <ClInclude Include="WICTextureLoader.h" />
     <ClInclude Include="xTime.h" />
   </ItemGroup>
   <ItemGroup>
@@ -212,6 +213,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="TransformNode.cpp" />
+    <ClCompile Include="WICTextureLoader.cpp" />
     <ClCompile Include="xTime.cpp" />
   </ItemGroup>
   <ItemGroup>

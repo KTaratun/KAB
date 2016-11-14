@@ -51,7 +51,7 @@ namespace FBXLoader
 	////////////////////////////////////////////////////////////////////////////
 	bool LoadMesh(FbxMesh* fbx_mesh, Mesh& mesh,
 		std::vector< FbxNode* >& fbx_joints,
-		std::vector< unsigned int >& control_point_indices);
+		std::vector<CtrlPoint*>& cps);
 
 	//////////////////////////////////////////////////////////////////////////////
 	//// GetBindPose:  Get the bind pose transform of a joint.
@@ -73,9 +73,9 @@ namespace FBXLoader
 	//                             parallell arrays.
 	// return:                     True on success, false on failure.
 	////////////////////////////////////////////////////////////////////////////
-	bool LoadSkin(FbxMesh* fbx_mesh, Mesh& mesh, std::vector<TransformNode> &hierarchy,
+	bool LoadSkin(FbxMesh* fbx_mesh, std::vector<TransformNode> &hierarchy,
 		std::vector< FbxNode* >& fbx_joints,
-		std::vector< unsigned int >& control_point_indices);
+		std::vector<CtrlPoint*>& cps);
 
 
 	////////////////////////////////////////////////////////////////////////////
@@ -84,7 +84,7 @@ namespace FBXLoader
 	// [out]mesh:     The mesh data loaded from the FbxMesh attribute.
 	// return:        True on success, false on failure.
 	////////////////////////////////////////////////////////////////////////////
-	bool LoadTexture(FbxMesh* fbx_mesh, Mesh& mesh);
+	bool LoadTexture(FbxMesh* fbx_mesh, Mesh& mesh, std::string& textureName);
 
 	////////////////////////////////////////////////////////////////////////////
 	// LoadAnimation:   Load an animation.
@@ -111,10 +111,14 @@ namespace FBXLoader
 	////////////////////////////////////////////////////////////////////////////
 	static void KeyReduction(Animation &animation);
 
-	
+	void CalculateTangentBinormal(Vertex vertex1, Vertex vertex2, Vertex vertex3, XMFLOAT3* tangent, XMFLOAT3* binormal);
+	void CalculateNormal(XMFLOAT3 tangent, XMFLOAT3 binormal, XMFLOAT3& normal);
+
+
 	bool BinaryOut(std::vector<Vertex>&inVertexVector, FbxIOFileHeaderInfo& fileheader, const char* _Filename)
 	{
 		std::string filename = std::string(_Filename);
+
 
 		// removes the .fbx from the file name
 		filename.pop_back();
@@ -158,13 +162,13 @@ namespace FBXLoader
 
 
 			FILE* file = nullptr;
-			
+
 			fopen_s(&file, filename.c_str(), "wb");
-			
+
 			fwrite(&header, sizeof(BinaryHeader), 1, file);
 			fwrite(&inVertexVector[0], sizeof(Vertex), inVertexVector.size(), file);
 			fclose(file);
-			
+
 		}
 		else
 			return false;
@@ -230,7 +234,7 @@ namespace FBXLoader
 			bytes.resize(header.file_size);
 
 			binaryStream.read((char*)&bytes[0], header.file_size);
-			
+
 			Vertex* v = reinterpret_cast<Vertex*>(&bytes[0]);
 			FILE* file = nullptr;
 
@@ -252,7 +256,7 @@ namespace FBXLoader
 	}
 
 
-	
+
 	// End Forward declaration of internal methods used by FBXLoader::Load method
 	////////////////////////////////////////////////////////////////////////////
 
@@ -264,7 +268,9 @@ namespace FBXLoader
 		// hierarchy, you may only need the root instead of a list of all nodes.
 		std::vector<TransformNode> &transformHierarchy,
 		// [out] The loaded animation
-		Animation &animation)
+		Animation &animation,
+		std::string & textureName
+	)
 	{
 		// Get an FBX manager
 		FbxManager* manager = FbxManager::Create();
@@ -291,7 +297,7 @@ namespace FBXLoader
 		{
 			return false;
 		}
-		
+
 		FbxIOFileHeaderInfo* head = nullptr;
 		head = importer->GetFileHeaderInfo();
 		// Initialize importer
@@ -359,63 +365,63 @@ namespace FBXLoader
 			FbxMesh* mesh_attribute = scene->GetSrcObject< FbxMesh >(i);
 
 			Mesh mesh;
-			std::vector< unsigned int > control_point_indices;
+			std::vector<CtrlPoint*> cps;
 
-			if (LoadMesh(mesh_attribute, mesh, fbx_joints, control_point_indices) == false)
+			if (LoadSkin(mesh_attribute, transformHierarchy, fbx_joints,
+				cps) == false)
 			{
 				return false;
 			}
-			if (LoadSkin(mesh_attribute, mesh, transformHierarchy, fbx_joints, 
-				control_point_indices) == false)
+			if (LoadMesh(mesh_attribute, mesh, fbx_joints, cps) == false)
 			{
 				return false;
 			}
-			if (LoadTexture(mesh_attribute, mesh) == false)
+			if (LoadTexture(mesh_attribute, mesh, textureName) == false)
 			{
 				return false;
 			}
 
-			//meshes.push_back(mesh);
+			meshes.push_back(mesh);
 			//_control_point_indices = control_point_indices;
 
-			std::vector<Vertex> verts;
-			std::vector<unsigned int> ctrl;
-
-			BinaryOut(mesh.verts, *head, fileName.c_str());
-
-			string f = fileName;
-			f.pop_back();
-			f.pop_back();
-			f.pop_back();
-			f.pop_back();
-			f += ".bin";
-			
-			BinaryIn(verts, *head, f.c_str());
-
-			mesh.verts.clear();
-			for (size_t i = 0; i < verts.size(); i++)
-				mesh.verts.push_back(verts[i]);
-
-			Vertex* v = &mesh.verts[92];
-			
-			meshes.push_back(mesh);
+			//std::vector<Vertex> verts;
+			//std::vector<unsigned int> ctrl;
+			//
+			//BinaryOut(mesh.verts, *head, fileName.c_str());
+			//
+			//string f = fileName;
+			//f.pop_back();
+			//f.pop_back();
+			//f.pop_back();
+			//f.pop_back();
+			//f += ".bin";
+			//
+			//BinaryIn(verts, *head, f.c_str());
+			//
+			//mesh.verts.clear();
+			//for (size_t i = 0; i < verts.size(); i++)
+			//	mesh.verts.push_back(verts[i]);
+			//
+			//Vertex* v = &mesh.verts[92];
+			//
+			//meshes.push_back(mesh);
 			//int x = 20;
 		}
 
 		// Get the number of animation stacks
 		int num_anim_stacks = scene->GetSrcObjectCount< FbxAnimStack >();
-		
+
 		FbxAnimStack* anim_stack;
 		for (int i = 0; i < num_anim_stacks; ++i)
 		{
 			// Get the current animation stack
 			anim_stack = scene->GetSrcObject< FbxAnimStack >(i);
 
-			
-		
+
+
 			FbxString animStackName = anim_stack->GetName();
 			animation.SetName(animStackName.Buffer());
-		
+
 			if (LoadAnimation(anim_stack, transformHierarchy, animation, fbx_joints, scene) == false)
 			{
 				return false;
@@ -428,7 +434,7 @@ namespace FBXLoader
 		return true;
 	}
 
-	
+
 
 	bool LoadHierarchy(FbxScene* scene, std::vector<TransformNode> &transformHierarchy,
 		std::vector< FbxNode* >& fbx_joints)
@@ -436,9 +442,9 @@ namespace FBXLoader
 		int numObjs = scene->GetSrcObjectCount();
 		for (int i = 0; i < numObjs; i++)
 		{
-			FbxNode* obj = (FbxNode*) scene->GetSrcObject(i);
+			FbxNode* obj = (FbxNode*)scene->GetSrcObject(i);
 			int attrCount = obj->GetNodeAttributeCount();
-		
+
 			for (int j = 0; j < attrCount; j++)
 			{
 				FbxNodeAttribute* nodeAttr = obj->GetNodeAttributeByIndex(j);
@@ -454,24 +460,24 @@ namespace FBXLoader
 		}
 		return true;
 		return false;
-/*
-		TODO
-		The FBXLoader::LoadHierarchy function will load a vector of all FbxNode objects 
-		that have skeleton node attributes or mesh attributes attached. You can use the 
-		FbxScene::GetSrcObjectCount and FbxScene::GetSrcObject functions to iterate through 
-		all of the FbxNode objects in the scene. When you find an FbxNode with a skeleton or 
-		mesh attribute attached, add an entry to both the fbx_joints container and the 
-		transformHierarchy container. Those containers are parallel containers and will be used 
-		in the LinkHierarchy method to setup the parent and child relationships in the hierarchy.
-		Make sure to set the 
-		HierarchyNode objects name. The name can be obtained by calling 
-		FbxNodeAttribute::GetName. The following API functions are relevant to this function:
-			•	FbxScene::GetSrcObjectCount
-			•	FbxScene::GetSrcObject
-			•	FbxNode::GetNodeAttributeCount
-			•	FbxNode::GetNodeAttributeByIndex
-			•	FbxNodeAttribute::GetAttributeType
-*/
+		/*
+				TODO
+				The FBXLoader::LoadHierarchy function will load a vector of all FbxNode objects
+				that have skeleton node attributes or mesh attributes attached. You can use the
+				FbxScene::GetSrcObjectCount and FbxScene::GetSrcObject functions to iterate through
+				all of the FbxNode objects in the scene. When you find an FbxNode with a skeleton or
+				mesh attribute attached, add an entry to both the fbx_joints container and the
+				transformHierarchy container. Those containers are parallel containers and will be used
+				in the LinkHierarchy method to setup the parent and child relationships in the hierarchy.
+				Make sure to set the
+				HierarchyNode objects name. The name can be obtained by calling
+				FbxNodeAttribute::GetName. The following API functions are relevant to this function:
+					•	FbxScene::GetSrcObjectCount
+					•	FbxScene::GetSrcObject
+					•	FbxNode::GetNodeAttributeCount
+					•	FbxNode::GetNodeAttributeByIndex
+					•	FbxNodeAttribute::GetAttributeType
+		*/
 	}
 
 	bool LinkHierarchy(std::vector<TransformNode> &transformHierarchy,
@@ -492,29 +498,29 @@ namespace FBXLoader
 					transformHierarchy[j].AddChild(&transformHierarchy[i]);
 					break;
 				}
-					
-			
+
+
 			//temp.child = transformHierarchy[i]
-		
+
 			//Set Transform Node based on the corresponding fbx_joint's GetParent() return
 		}
-		
+
 		return true;
 		return false;
 
-/*	
-	TODO
-	The FBXLoader::LinkHierarchy function is responsible for setting the parent and 
-	children for the TransformNode objects in the hierarchy. You should loop through 
-	all of the fbx_joint elements, and set those indices appropriately.
-	For each node, you should attempt to find its parent in the fbx_joints array. If the 
-	parent does not exist in the array, you can go to the next parent and attempt to find that.
-	If you make it past the root of the tree, then your current node is a root node. Make 
-	sure to its parent to null to designate this. 
-	If you found a parent node, then set the parent of your current node to that 
-	node.  At this point, you can also add the current node as a child 
-	of the parent node. The following API function is of interest here :
-		•	FbxNode::GetParent*/
+		/*
+			TODO
+			The FBXLoader::LinkHierarchy function is responsible for setting the parent and
+			children for the TransformNode objects in the hierarchy. You should loop through
+			all of the fbx_joint elements, and set those indices appropriately.
+			For each node, you should attempt to find its parent in the fbx_joints array. If the
+			parent does not exist in the array, you can go to the next parent and attempt to find that.
+			If you make it past the root of the tree, then your current node is a root node. Make
+			sure to its parent to null to designate this.
+			If you found a parent node, then set the parent of your current node to that
+			node.  At this point, you can also add the current node as a child
+			of the parent node. The following API function is of interest here :
+				•	FbxNode::GetParent*/
 
 	}
 
@@ -552,11 +558,9 @@ namespace FBXLoader
 
 	bool LoadMesh(FbxMesh* fbx_mesh, Mesh& mesh,
 		std::vector< FbxNode* >& fbx_joints,
-		std::vector< unsigned int >& control_point_indices)
+		std::vector<CtrlPoint*>& cps)
 	{
 
-		std::vector<CtrlPoint*> mControlPoints;
-		ProcessControlPoint(fbx_mesh, mControlPoints);
 		FbxVector4* CPs = fbx_mesh->GetControlPoints();
 		FbxLayerElementArrayTemplate<FbxVector2> *UVs;
 		fbx_mesh->GetTextureUV(&UVs);
@@ -564,18 +568,18 @@ namespace FBXLoader
 		FbxGeometryElementNormal* normalElement = fbx_mesh->GetElementNormal();
 		FbxGeometryElementBinormal* biNormalElement = fbx_mesh->GetElementBinormal();
 		FbxGeometryElementTangent* tangentElement = fbx_mesh->GetElementTangent();
-		
+
 		//std::vector<
 		Vertex vert;
 
 		int vertexCounter = 0;
 		int polyCount = fbx_mesh->GetPolygonCount();
-		
+
 		for (size_t polyIndex = 0; polyIndex < polyCount; polyIndex++)
 		{
 			int vertCount = fbx_mesh->GetPolygonSize(polyIndex);
 
-			for (size_t vertIndex = 0;  vertIndex < vertCount;  vertIndex++)
+			for (size_t vertIndex = 0; vertIndex < vertCount; vertIndex++)
 			{
 				int ctrlPointIndex = fbx_mesh->GetPolygonVertex(polyIndex, vertIndex);
 				vert.xyz.x = CPs[ctrlPointIndex].mData[0]; // x
@@ -584,52 +588,64 @@ namespace FBXLoader
 
 				int uVIndex = fbx_mesh->GetTextureUVIndex(polyIndex, vertIndex);
 				vert.uvw.x = (float)UVs->GetAt(uVIndex).mData[0]; // u
-				vert.uvw.y = 1- (float)UVs->GetAt(uVIndex).mData[1]; // v
+				vert.uvw.y = 1 - (float)UVs->GetAt(uVIndex).mData[1]; // v
 				vert.uvw.z = 0; // w
 
-				int normIndex = 0;
+				int normIndex = 0, binormIndex = 0, tangentIndex = 0;
 
 				if (normalElement->GetReferenceMode() == FbxGeometryElement::eDirect)
-					normIndex = vertIndex;
-				else if (normalElement->GetReferenceMode() == FbxGeometryElement::eIndexToDirect)
 					normIndex = normalElement->GetIndexArray().GetAt(vertIndex);
+				if (biNormalElement != NULL)
+					binormIndex = biNormalElement->GetIndexArray().GetAt(vertIndex);
+				if (tangentElement != NULL)
+					tangentIndex = tangentElement->GetIndexArray().GetAt(vertIndex);
+				//	normIndex = vertIndex;
+				//else if (normalElement->GetReferenceMode() == FbxGeometryElement::eIndexToDirect)
+				FbxVector4 normals;
+				FbxVector4 binormals;
+				FbxVector4 tangents;
+				normals = normalElement->GetDirectArray().GetAt(normIndex);
+				if (biNormalElement != NULL)
+					binormals = biNormalElement->GetDirectArray().GetAt(binormIndex);
+				if (tangentElement != NULL)
+					tangents = tangentElement->GetDirectArray().GetAt(tangentIndex);
 
-				FbxVector4 normals = normalElement->GetDirectArray().GetAt(normIndex);
+				BlendingInfoPrecaution(cps[vertIndex]);
 
-				BlendingInfoPrecaution(mControlPoints[vertIndex]);
+				vert.weights.x = cps[vertIndex]->blendingInfo[0].blendingWeight;
+				vert.weights.y = cps[vertIndex]->blendingInfo[1].blendingWeight;
+				vert.weights.z = cps[vertIndex]->blendingInfo[2].blendingWeight;
+				vert.weights.w = cps[vertIndex]->blendingInfo[3].blendingWeight;
 
-				vert.weights.x = mControlPoints[vertIndex]->blendingInfo[0].blendingWeight;
-				vert.weights.y = mControlPoints[vertIndex]->blendingInfo[1].blendingWeight;
-				vert.weights.z = mControlPoints[vertIndex]->blendingInfo[2].blendingWeight;
-				vert.weights.w = mControlPoints[vertIndex]->blendingInfo[3].blendingWeight;
-
-				vert.bone.x = mControlPoints[vertIndex]->blendingInfo[0].blendingIndex;
-				vert.bone.y = mControlPoints[vertIndex]->blendingInfo[1].blendingIndex;
-				vert.bone.z = mControlPoints[vertIndex]->blendingInfo[2].blendingIndex;
-				vert.bone.w = mControlPoints[vertIndex]->blendingInfo[3].blendingIndex;
+				vert.bone.x = cps[vertIndex]->blendingInfo[0].blendingIndex;
+				vert.bone.y = cps[vertIndex]->blendingInfo[1].blendingIndex;
+				vert.bone.z = cps[vertIndex]->blendingInfo[2].blendingIndex;
+				vert.bone.w = cps[vertIndex]->blendingInfo[3].blendingIndex;
 
 				vert.normals.x = (float)normals.mData[0];
 				vert.normals.y = (float)normals.mData[1];
-				vert.normals.z = (float)normals.mData[2];
+				vert.normals.z = -(float)normals.mData[2];
+				if (biNormalElement != NULL)
+				{
+					vert.bin.x = (float)binormals.mData[0];
+					vert.bin.y = (float)binormals.mData[1];
+					vert.bin.z = -(float)binormals.mData[2];
+				}
+				if (tangentElement != NULL)
+				{
+					vert.tan.x = (float)tangents.mData[0];
+					vert.tan.y = (float)tangents.mData[1];
+					vert.tan.z = -(float)tangents.mData[2];
+				CalculateNormal(vert.tan, vert.bin, vert.normals); 
+				}
+
+				//CalculateTangentBinormal()
+				//CalculateTangentBinormal(, vert, vert, &vert.tan, &vert.bin);
 
 				//control_point_indices.push_back(ctrlPointIndex);
 				mesh.verts.push_back(vert);
-
-				//bool found = false;
-				//
-				//for (size_t i = 0; i < mesh.verts.size(); i++)
-				//	if (mesh.verts[i].xyz[0] == vert.xyz[0] && mesh.verts[i].xyz[1] == vert.xyz[1] && mesh.verts[i].xyz[2] == vert.xyz[2])
-				//	{
-				//		found = true;
-				//		control_point_indices.push_back(i);
-				//	}
-				//
-				//if (found == false)
-				//{
-				//	mesh.verts.push_back(vert);
-				//	control_point_indices.push_back(mesh.verts.size() - 1);
-				//}
 			}
+			//CalculateTangentBinormal(mesh.verts[mesh.verts.size - 1], mesh.verts[mesh.verts.size - 2], mesh.verts[mesh.verts.size - 3], )
 		}
 
 		//for (auto itr = mControlPoints.begin(); itr != mControlPoints.end(); ++itr)
@@ -637,7 +653,7 @@ namespace FBXLoader
 		//	delete itr.get;
 		//}
 		//mControlPoints.clear();
-		
+
 		return true;
 		// TODO
 		// Get control points - fbx_mesh->GetControlPoints()
@@ -657,31 +673,47 @@ namespace FBXLoader
 
 	}
 
-	bool LoadSkin(FbxMesh* fbx_mesh, Mesh& mesh, std::vector<TransformNode> &hierarchy,
+	bool LoadSkin(FbxMesh* fbx_mesh, std::vector<TransformNode> &hierarchy,
 		std::vector< FbxNode* >& fbx_joints,
-		std::vector< unsigned int >& control_point_indices)
+		std::vector<CtrlPoint*>& cps)
 	{
-		std::vector<CtrlPoint*> cps;
 		ProcessControlPoint(fbx_mesh, cps);
 
-		for (size_t deformerIndex = 0; deformerIndex < fbx_mesh->GetDeformerCount(); deformerIndex++)
+		int deformerCount = fbx_mesh->GetDeformerCount();
+
+		for (size_t deformerIndex = 0; deformerIndex < deformerCount; deformerIndex++)
 		{
 			FbxSkin* currSkin = reinterpret_cast<FbxSkin*>(fbx_mesh->GetDeformer(deformerIndex, FbxDeformer::eSkin));
 
-			for (size_t clusterIndex = 0; clusterIndex < currSkin->GetClusterCount(); clusterIndex++)
+			int clusterCount = currSkin->GetClusterCount();
+
+			for (size_t clusterIndex = 0; clusterIndex < clusterCount; clusterIndex++)
 			{
 				FbxCluster* currCluster = currSkin->GetCluster(clusterIndex);
 				std::string currJointName = currCluster->GetLink()->GetName();
 				unsigned int currJointIndex = FindJointIndex(currJointName, fbx_joints);
 
 				FbxAMatrix bindMatrix = GetBindPose(fbx_joints[currJointIndex], currCluster);
-				XMMATRIX newBind;
+				FbxAMatrix invBind = bindMatrix.Inverse();
+				XMMATRIX newBind, newInv;
 
 				for (size_t i = 0; i < 4; i++)
 					for (size_t j = 0; j < 4; j++)
 						newBind.r[i].m128_f32[j] = bindMatrix.mData[i][j];
-				
+
+				for (size_t i = 0; i < 4; i++)
+					for (size_t j = 0; j < 4; j++)
+						newInv.r[i].m128_f32[j] = invBind.mData[i][j];
+
+				//newBind.r[0].m128_f32[2] *= -1;
+				//newBind.r[1].m128_f32[2] *= -1;
+				//newBind.r[2].m128_f32[0] *= -1;
+				//newBind.r[2].m128_f32[1] *= -1;
+				//newBind.r[2].m128_f32[2] *= -1;
+				//newBind.r[2].m128_f32[3] *= -1;
+
 				hierarchy[currJointIndex].SetLocal(newBind);
+				hierarchy[currJointIndex].SetInvBind(newInv);
 
 				unsigned int numIndicies = currCluster->GetControlPointIndicesCount();
 				for (size_t i = 0; i < numIndicies; i++)
@@ -693,26 +725,34 @@ namespace FBXLoader
 				}
 			}
 		}
+
+		BlendingIndexWeightPair currBlendingIndexWeightPair;
+		currBlendingIndexWeightPair.blendingIndex = 0;
+		currBlendingIndexWeightPair.blendingWeight = 0;
+		for (int i = 0; i < cps.size(); i++)
+			for (unsigned int j = cps[i]->blendingInfo.size(); j < 4; ++j)
+				cps[i]->blendingInfo.push_back(currBlendingIndexWeightPair);
+
 		return true;
 		return false;
 		/*
 		TODO
-		The FBXLoader::LoadSkin function is the function used to load skinning information. 
+		The FBXLoader::LoadSkin function is the function used to load skinning information.
 		This function will primarily be tasked with extracting joint influence data,
-		weight and index, for each Vertex. 
-		
-		You will loop through the number of skin deformers in the FbxMesh. For each skin 
-		deformer, you will loop through the skin clusters. Each skin cluster represents one 
+		weight and index, for each Vertex.
+
+		You will loop through the number of skin deformers in the FbxMesh. For each skin
+		deformer, you will loop through the skin clusters. Each skin cluster represents one
 		joint's effect on a cluster of control points. The cluster's link represents the joint.
-		You will have to find the index of the joint by searching through the fbx_joints 
-		vector. Once you know the index, you will have to calculate the world bind pose 
+		You will have to find the index of the joint by searching through the fbx_joints
+		vector. Once you know the index, you will have to calculate the world bind pose
 		transform of the joint. You can call FBXLoader::GetBindPose to obtain this matrix and
 		store the transform in the TransformNode at that index in 'hierarchy'.
 
-		You will now need to load influence data from the cluster. Each control point index 
-		in the cluster will be used to find an influence for the current joint. You should 
-		reject influences if their weight is negligible(something less than 0.001f). 
-		This will avoid unnecessary processing. The following API methods are or interest for 
+		You will now need to load influence data from the cluster. Each control point index
+		in the cluster will be used to find an influence for the current joint. You should
+		reject influences if their weight is negligible(something less than 0.001f).
+		This will avoid unnecessary processing. The following API methods are or interest for
 		the implementation of this function:
 			•	FbxMesh::GetDeformerCount
 			•	FbxMesh::GetDeformer
@@ -743,9 +783,10 @@ namespace FBXLoader
 		return result;
 	}
 
-	bool LoadTexture(FbxMesh* fbx_mesh, Mesh& mesh)
+	bool LoadTexture(FbxMesh* fbx_mesh, Mesh& mesh, std::string& textureName)
 	{
 		FbxProperty property;
+		std::string texture_name;
 
 		if (fbx_mesh->GetNode() == NULL)
 			return false;
@@ -782,15 +823,24 @@ namespace FBXLoader
 					if (file_texture == 0)
 						continue;
 
-					std::string texture_name = file_texture->GetFileName();
+					texture_name = file_texture->GetFileName();
+
 
 					// TODO : something with the texture name here....
 
 					std::string::size_type pos = texture_name.find_last_of("/\\");
-					if (pos != std::string::npos)
-					{
-						texture_name = texture_name.substr(pos + 1);
-					}
+					texture_name[pos] = '\\';
+					//texture_name[pos] = \;
+					//if (pos != std::string::npos)
+					//{
+					//	texture_name = texture_name.substr(pos + 1);
+					//}
+					//for (size_t i = 0; i < 3; i++)
+					//{
+					//	texture_name.pop_back();
+					//}
+					//texture_name += "dds";
+					textureName = texture_name;
 				}
 			}
 		}
@@ -876,7 +926,7 @@ namespace FBXLoader
 		}
 
 		animation.keyFrames[animation.keyFrames.size() - 1]->SetNext(animation.keyFrames[0]);
-		
+
 		return true;
 		return false;
 		// TODO
@@ -885,7 +935,7 @@ namespace FBXLoader
 		// as some joints will not move as much as others in a given animation. If using channels,
 		// we will want to query when each key was made for each joint in the animation, then extract
 		// the transform for that joint at the found time. 
-		
+
 		// The FBX SDK will give you allow you to extract transformations for a joint at anytime, 
 		// even if the asset did not have a key made at the given time. If not using channels, a
 		// keyframe of all joint transformations can be found key times that we provide at a fixed rate
@@ -973,5 +1023,86 @@ namespace FBXLoader
 		// high you can set that minimum threshold for a particular asset before lost keys cause the 
 		// animation to not look correct. FYI, for rotations with quaternions, keys can typically be
 		// properly interpolated as long as they are under 180 degrees different.
+	}
+
+	void CalculateTangentBinormal(Vertex vertex1, Vertex vertex2, Vertex vertex3, XMFLOAT3* tangent, XMFLOAT3* binormal)
+	{
+
+		float vector1[3];
+		float vector2[3];
+		float tuVector[2];
+		float tvVector[2];
+		float den;
+		float length;
+
+
+		// Calculate the two vectors for this face.
+		vector1[0] = vertex2.xyz.x - vertex1.xyz.x;
+		vector1[1] = vertex2.xyz.y - vertex1.xyz.y;
+		vector1[2] = vertex2.xyz.z - vertex1.xyz.z;
+
+		vector2[0] = vertex3.xyz.x - vertex1.xyz.x;
+		vector2[1] = vertex3.xyz.y - vertex1.xyz.y;
+		vector2[2] = vertex3.xyz.z - vertex1.xyz.z;
+
+		// Calculate the tu and tv texture space vectors.
+		tuVector[0] = vertex2.uvw.x - vertex1.uvw.x;
+		tuVector[1] = vertex2.uvw.y - vertex1.uvw.y;
+		tuVector[2] = vertex2.uvw.z - vertex1.uvw.z;
+
+		tuVector[1] = vertex3.uvw.x - vertex1.uvw.x;
+		tuVector[1] = vertex3.uvw.y - vertex1.uvw.y;
+		tuVector[1] = vertex3.uvw.z - vertex1.uvw.z;
+
+		// Calculate the denominator of the tangent/binormal equation.
+		den = 1.0f / (tuVector[0] * tvVector[1] - tuVector[1] * tvVector[0]);
+
+		// Calculate the cross products and multiply by the coefficient to get the tangent and binormal.
+		tangent->x = (tvVector[1] * vector1[0] - tvVector[0] * vector2[0]) * den;
+		tangent->y = (tvVector[1] * vector1[1] - tvVector[0] * vector2[1]) * den;
+		tangent->z = (tvVector[1] * vector1[2] - tvVector[0] * vector2[2]) * den;
+
+		binormal->x = (tuVector[0] * vector2[0] - tuVector[1] * vector1[0]) * den;
+		binormal->y = (tuVector[0] * vector2[1] - tuVector[1] * vector1[1]) * den;
+		binormal->z = (tuVector[0] * vector2[2] - tuVector[1] * vector1[2]) * den;
+
+		// Calculate the length of this normal.
+		length = sqrt((tangent->x * tangent->x) + (tangent->y * tangent->y) + (tangent->z * tangent->z));
+
+		// Normalize the normal and then store it
+		tangent->x = tangent->x / length;
+		tangent->y = tangent->y / length;
+		tangent->z = tangent->z / length;
+
+		// Calculate the length of this normal.
+		length = sqrt((binormal->x * binormal->x) + (binormal->y * binormal->y) + (binormal->z * binormal->z));
+
+		// Normalize the normal and then store it
+		binormal->x = binormal->x / length;
+		binormal->y = binormal->y / length;
+		binormal->z = binormal->z / length;
+
+		return;
+	}
+
+	void CalculateNormal(XMFLOAT3 tangent, XMFLOAT3 binormal, XMFLOAT3& normal)
+	{
+		float length;
+
+
+		// Calculate the cross product of the tangent and binormal which will give the normal vector.
+		normal.x = (tangent.y * binormal.z) - (tangent.z * binormal.y);
+		normal.y = (tangent.z * binormal.x) - (tangent.x * binormal.z);
+		normal.z = (tangent.x * binormal.y) - (tangent.y * binormal.x);
+
+		// Calculate the length of the normal.
+		length = sqrt((normal.x * normal.x) + (normal.y * normal.y) + (normal.z * normal.z));
+
+		// Normalize the normal.
+		normal.x = normal.x / length;
+		normal.y = normal.y / length;
+		normal.z = normal.z / length;
+
+		return;
 	}
 };
