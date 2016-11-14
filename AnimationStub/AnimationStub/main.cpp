@@ -450,7 +450,7 @@ bool APP::Run()
 		camMat.r[3].m128_f32[1] = 0;
 		camMat.r[3].m128_f32[2] = 0;
 
-		camMat = XMMatrixMultiply(camMat, XMMatrixRotationY(xTime.Delta()));
+		camMat = XMMatrixMultiply(camMat, XMMatrixRotationY((float)xTime.Delta()));
 
 		camMat.r[3].m128_f32[0] = position.x;
 		camMat.r[3].m128_f32[1] = position.y;
@@ -467,7 +467,7 @@ bool APP::Run()
 		camMat.r[3].m128_f32[1] = 0;
 		camMat.r[3].m128_f32[2] = 0;
 
-		camMat = XMMatrixMultiply(camMat, XMMatrixRotationY(-xTime.Delta()));
+		camMat = XMMatrixMultiply(camMat, XMMatrixRotationY((float)-xTime.Delta()));
 
 		camMat.r[3].m128_f32[0] = position.x;
 		camMat.r[3].m128_f32[1] = position.y;
@@ -480,7 +480,7 @@ bool APP::Run()
 	{
 		XMMATRIX camMat = XMLoadFloat4x4(&m4x4_camera);
 
-		camMat = XMMatrixMultiply(XMMatrixRotationX(-xTime.Delta()), camMat);
+		camMat = XMMatrixMultiply(XMMatrixRotationX((float)-xTime.Delta()), camMat);
 
 		XMStoreFloat4x4(&m4x4_camera, camMat);
 
@@ -490,7 +490,7 @@ bool APP::Run()
 	{
 		XMMATRIX camMat = XMLoadFloat4x4(&m4x4_camera);
 
-		camMat = XMMatrixMultiply(XMMatrixRotationX(xTime.Delta()), camMat);
+		camMat = XMMatrixMultiply(XMMatrixRotationX((float)xTime.Delta()), camMat);
 
 		XMStoreFloat4x4(&m4x4_camera, camMat);
 	}

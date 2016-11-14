@@ -140,8 +140,8 @@ namespace FBXLoader
 			BinaryHeader header;
 
 			// initialize header
-			header.file_size = (inVertexVector.size() * sizeof(Vertex));
-			header.vector_size = inVertexVector.size();
+			header.file_size = (int)((inVertexVector.size() * sizeof(Vertex)));
+			header.vector_size = (int)inVertexVector.size();
 
 			if (fileheader.mFileVersion > 0)
 				header.fileversion = fileheader.mFileVersion;
@@ -525,9 +525,10 @@ namespace FBXLoader
 
 	unsigned int FindJointIndex(const std::string& inJointName, std::vector<FbxNode*> joints)
 	{
-		for (size_t i = 0; i < joints.size(); i++)
+		for (int i = 0; i < joints.size(); i++)
 			if (joints[i]->GetName() == inJointName)
 				return i;
+		return -1;
 	}
 
 	void ProcessControlPoint(FbxMesh* mesh, std::vector<CtrlPoint*>& cPs)
@@ -537,9 +538,9 @@ namespace FBXLoader
 		{
 			CtrlPoint* currCtrlPoint = new CtrlPoint();
 			DirectX::XMFLOAT3 currPosition;
-			currPosition.x = static_cast<float>(mesh->GetControlPointAt(i).mData[0]);
-			currPosition.y = static_cast<float>(mesh->GetControlPointAt(i).mData[1]);
-			currPosition.z = static_cast<float>(mesh->GetControlPointAt(i).mData[2]);
+			currPosition.x = (float)(mesh->GetControlPointAt((int)i).mData[0]);
+			currPosition.y = (float)(mesh->GetControlPointAt((int)i).mData[1]);
+			currPosition.z = (float)(mesh->GetControlPointAt((int)i).mData[2]);
 			currCtrlPoint->pos = currPosition;
 			cPs.push_back(currCtrlPoint);
 		}
@@ -573,19 +574,19 @@ namespace FBXLoader
 
 		int vertexCounter = 0;
 		int polyCount = fbx_mesh->GetPolygonCount();
+		int totalVerts = polyCount * 3;
+		mesh.verts.resize(totalVerts);
 
-		for (size_t polyIndex = 0; polyIndex < polyCount; polyIndex++)
+		for (int polyIndex = 0; polyIndex < polyCount; polyIndex++)
 		{
 			int vertCount = fbx_mesh->GetPolygonSize(polyIndex);
 
-			// get vertices reordered "
-
-			for (size_t vertIndex = 0; vertIndex < vertCount; vertIndex++)
+			for (int vertIndex = 0; vertIndex < vertCount; vertIndex++)
 			{
 				int ctrlPointIndex = fbx_mesh->GetPolygonVertex(polyIndex, vertIndex);
-				vert.xyz.x = CPs[ctrlPointIndex].mData[0]; // x
-				vert.xyz.y = CPs[ctrlPointIndex].mData[1]; // y
-				vert.xyz.z = -CPs[ctrlPointIndex].mData[2]; // z
+				vert.xyz.x = (float)CPs[ctrlPointIndex].mData[0]; // x
+				vert.xyz.y = (float)CPs[ctrlPointIndex].mData[1]; // y
+				vert.xyz.z = (float)-CPs[ctrlPointIndex].mData[2]; // z
 
 				int uVIndex = fbx_mesh->GetTextureUVIndex(polyIndex, vertIndex);
 				vert.uvw.x = (float)UVs->GetAt(uVIndex).mData[0]; // u
@@ -614,10 +615,10 @@ namespace FBXLoader
 				BlendingInfoPrecaution(cps[vertIndex]);
 
 				//fbx_mesh->GetCon
-				vert.weights.x = cps[ctrlPointIndex]->blendingInfo[0].blendingWeight;
-				vert.weights.y = cps[ctrlPointIndex]->blendingInfo[1].blendingWeight;
-				vert.weights.z = cps[ctrlPointIndex]->blendingInfo[2].blendingWeight;
-				vert.weights.w = cps[ctrlPointIndex]->blendingInfo[3].blendingWeight;
+				vert.weights.x = (float)cps[ctrlPointIndex]->blendingInfo[0].blendingWeight;
+				vert.weights.y = (float)cps[ctrlPointIndex]->blendingInfo[1].blendingWeight;
+				vert.weights.z = (float)cps[ctrlPointIndex]->blendingInfo[2].blendingWeight;
+				vert.weights.w = (float)cps[ctrlPointIndex]->blendingInfo[3].blendingWeight;
 
 				vert.bone.x = cps[ctrlPointIndex]->blendingInfo[0].blendingIndex;
 				vert.bone.y = cps[ctrlPointIndex]->blendingInfo[1].blendingIndex;
@@ -645,7 +646,14 @@ namespace FBXLoader
 				//CalculateTangentBinormal(, vert, vert, &vert.tan, &vert.bin);
 
 				//control_point_indices.push_back(ctrlPointIndex);
-				mesh.verts.push_back(vert);
+				//mesh.verts.push_back(vert);
+	
+				if (vertIndex == 0)
+					mesh.verts[(polyIndex * 3) + 1] = vert;
+				else if (vertIndex == 1)
+					mesh.verts[(polyIndex * 3) + 0] = vert;
+				else
+					mesh.verts[(polyIndex * 3) + 2] = vert;
 			}
 			//CalculateTangentBinormal(mesh.verts[mesh.verts.size - 1], mesh.verts[mesh.verts.size - 2], mesh.verts[mesh.verts.size - 3], )
 		}
@@ -683,13 +691,13 @@ namespace FBXLoader
 
 		int deformerCount = fbx_mesh->GetDeformerCount();
 
-		for (size_t deformerIndex = 0; deformerIndex < deformerCount; deformerIndex++)
+		for (int deformerIndex = 0; deformerIndex < deformerCount; deformerIndex++)
 		{
 			FbxSkin* currSkin = reinterpret_cast<FbxSkin*>(fbx_mesh->GetDeformer(deformerIndex, FbxDeformer::eSkin));
 
 			int clusterCount = currSkin->GetClusterCount();
 
-			for (size_t clusterIndex = 0; clusterIndex < clusterCount; clusterIndex++)
+			for (int clusterIndex = 0; clusterIndex < clusterCount; clusterIndex++)
 			{
 				FbxCluster* currCluster = currSkin->GetCluster(clusterIndex);
 				std::string currJointName = currCluster->GetLink()->GetName();
@@ -699,13 +707,13 @@ namespace FBXLoader
 				FbxAMatrix invBind = bindMatrix.Inverse();
 				XMMATRIX newBind, newInv;
 
-				for (size_t i = 0; i < 4; i++)
-					for (size_t j = 0; j < 4; j++)
-						newBind.r[i].m128_f32[j] = bindMatrix.mData[i][j];
+				for (int i = 0; i < 4; i++)
+					for (int j = 0; j < 4; j++)
+						newBind.r[i].m128_f32[j] = (float)bindMatrix.mData[i][j];
 
-				for (size_t i = 0; i < 4; i++)
-					for (size_t j = 0; j < 4; j++)
-						newInv.r[i].m128_f32[j] = invBind.mData[i][j];
+				for (int i = 0; i < 4; i++)
+					for (int j = 0; j < 4; j++)
+						newInv.r[i].m128_f32[j] = (float)invBind.mData[i][j];
 
 				newBind.r[0].m128_f32[2] *= -1;
 				newBind.r[1].m128_f32[2] *= -1;
@@ -733,7 +741,7 @@ namespace FBXLoader
 		currBlendingIndexWeightPair.blendingIndex = 0;
 		currBlendingIndexWeightPair.blendingWeight = 0;
 		for (int i = 0; i < cps.size(); i++)
-			for (unsigned int j = cps[i]->blendingInfo.size(); j < 4; ++j)
+			for (size_t j = cps[i]->blendingInfo.size(); j < 4; ++j)
 				cps[i]->blendingInfo.push_back(currBlendingIndexWeightPair);
 
 		return true;
@@ -874,7 +882,7 @@ namespace FBXLoader
 		FbxTime end = takeInfo->mLocalTimeSpan.GetStop();
 		FbxLongLong startFrame = start.GetFrameCount(FbxTime::eFrames24); //for debugging
 		FbxLongLong endFrame = end.GetFrameCount(FbxTime::eFrames24); //for debugging
-		animation.SetDuration(end.GetFrameCount(FbxTime::eFrames24) - start.GetFrameCount(FbxTime::eFrames24) + 1);
+		animation.SetDuration((float)(end.GetFrameCount(FbxTime::eFrames24) - start.GetFrameCount(FbxTime::eFrames24) + 1));
 		KeyFrame* old;
 
 		for (FbxLongLong i = startFrame; i <= endFrame; ++i) //forced i to be 0 instead of k since it was giving a different value
@@ -883,7 +891,7 @@ namespace FBXLoader
 			KeyFrame* currAnim = new KeyFrame();
 			FbxTime currTime;
 			currTime.SetFrame(i, FbxTime::eFrames24);
-			currAnim->SetKeyFrameNum(i);
+			currAnim->SetKeyFrameNum((int)i);
 
 			for (size_t j = 0; j < fbx_joints.size(); j++)
 			{
@@ -905,9 +913,9 @@ namespace FBXLoader
 
 
 				XMMATRIX newTranOff;
-				for (size_t i = 0; i < 4; i++)
-					for (size_t j = 0; j < 4; j++)
-						newTranOff.r[i].m128_f32[j] = currentTransformOffset.mData[i][j];
+				for (int i = 0; i < 4; i++)
+					for (int j = 0; j < 4; j++)
+						newTranOff.r[i].m128_f32[j] = (float)currentTransformOffset.mData[i][j];
 
 				//XMMATRIX newEval;
 				//for (size_t i = 0; i < 4; i++)
@@ -919,7 +927,7 @@ namespace FBXLoader
 			}
 			animation.keyFrames.push_back(currAnim);
 			animation.keyFrames[i]->SetKeyTime(currTime);
-			animation.keyFrames[i]->SetKeyFrameNum(i);
+			animation.keyFrames[i]->SetKeyFrameNum((int)i);
 			if (i != 0)
 				old->SetNext(currAnim);
 
@@ -1032,8 +1040,8 @@ namespace FBXLoader
 
 		float vector1[3];
 		float vector2[3];
-		float tuVector[2];
-		float tvVector[2];
+		float tuVector[3];
+		float tvVector[3];
 		float den;
 		float length;
 
@@ -1052,9 +1060,9 @@ namespace FBXLoader
 		tuVector[1] = vertex2.uvw.y - vertex1.uvw.y;
 		tuVector[2] = vertex2.uvw.z - vertex1.uvw.z;
 
-		tuVector[1] = vertex3.uvw.x - vertex1.uvw.x;
-		tuVector[1] = vertex3.uvw.y - vertex1.uvw.y;
-		tuVector[1] = vertex3.uvw.z - vertex1.uvw.z;
+		tvVector[0] = vertex3.uvw.x - vertex1.uvw.x;
+		tvVector[1] = vertex3.uvw.y - vertex1.uvw.y;
+		tvVector[2] = vertex3.uvw.z - vertex1.uvw.z;
 
 		// Calculate the denominator of the tangent/binormal equation.
 		den = 1.0f / (tuVector[0] * tvVector[1] - tuVector[1] * tvVector[0]);

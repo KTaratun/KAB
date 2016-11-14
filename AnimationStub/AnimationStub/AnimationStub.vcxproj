@@ -179,6 +179,7 @@
   <ItemGroup>
     <ClInclude Include="Animation.h" />
     <ClInclude Include="AnimStubApp.h" />
+    <ClInclude Include="Blender.h" />
     <ClInclude Include="boxBind.h" />
     <ClInclude Include="cubeModel.h" />
     <ClInclude Include="DDSTextureLoader.h" />
@@ -197,6 +198,7 @@
   <ItemGroup>
     <ClCompile Include="Animation.cpp" />
     <ClCompile Include="AnimStubApp.cpp" />
+    <ClCompile Include="Blender.cpp" />
     <ClCompile Include="boxBind.cpp" />
     <ClCompile Include="cubeModel.cpp" />
     <ClCompile Include="DDSTextureLoader.cpp" />

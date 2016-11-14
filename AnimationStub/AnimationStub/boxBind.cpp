@@ -53,7 +53,10 @@ void MeshClass::Initialize(ID3D11Device* device)
 	};
 	
 	interp.SetAnimPtr(&animations[0]);
-	//interp.SetAnimPtr(&animations[1], 1);
+	interp2.SetAnimPtr(&animations[1]);
+	blender.SetAnim(&interp);
+	blender.SetNextAnim(&interp2);
+	blender.SetBones(transformHierarchy.size());
 
 	worldMatrix.objectMatrix = IdentityMatrix;
 
@@ -64,7 +67,7 @@ void MeshClass::Initialize(ID3D11Device* device)
 	vertexBufferDesc.Usage = D3D11_USAGE_IMMUTABLE;
 	vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 	vertexBufferDesc.CPUAccessFlags = NULL;
-	vertexBufferDesc.ByteWidth = sizeof(Vertex) * meshes[0].verts.size();
+	vertexBufferDesc.ByteWidth = sizeof(Vertex) * (UINT)meshes[0].verts.size();
 	vertexBufferDesc.MiscFlags = 0;
 
 	D3D11_SUBRESOURCE_DATA initialDataVertex;
@@ -170,59 +173,24 @@ void MeshClass::Render(ID3D11DeviceContext* deviceContext, ID3D11DepthStencilVie
 	deviceContext->IASetIndexBuffer(indexBuffer, DXGI_FORMAT_R32_UINT, 0);
 
 	deviceContext->RSSetState(p_rsWireframe);
-	deviceContext->Draw(meshes[0].verts.size(), 0);
+	deviceContext->Draw((UINT)meshes[0].verts.size(), 0);
 	deviceContext->RSSetState(p_rsSolid);
-	
-	// KEYFRAME INTERPOLATION
-	KeyFrame keyframe = interp.Process(delta);
 
-	std::vector<XMMATRIX> boneOffsets;
+	blender.Update(delta, meshes[0].verts, transformHierarchy);
 	std::vector<Vertex> vertOut = meshes[0].verts;
-
-	// SETTING UP BONE OFFSETS
-	for (size_t i = 0; i < transformHierarchy.size(); i++)
-	{
-		XMMATRIX bO = transformHierarchy[i].GetInvBind() * keyframe.bones[i];
-		boneOffsets.push_back(bO);
-	}
-
-	// EXPERIMENTING WITH UPDATING VERTICIES
-	//for (size_t i = 0; i < vertOut.size(); i++)
-	//{
-	//	XMVECTOR vertPos = XMLoadFloat3(&meshes[0].verts[i].xyz);
-	//	//XMVECTOR bO = boneOffsets[meshes[0].verts[i].bone.x].r[3] * vertPos;
-	//	XMVECTOR bO = transformHierarchy[meshes[0].verts[i].bone.x].GetInvBind().r[3] * keyframe.bones[meshes[0].verts[i].bone.x].r[3] * vertPos;
-	//	//bO.m128_f32[0] *= 1.5;
-	//	XMStoreFloat3(&vertOut[i].xyz, bO);
-	//
-	//}
 
 	// ROUGHLY MATH FOR SMOOTH SKINNING
 	for (size_t i = 0; i < vertOut.size(); i++)
 	{
-		
 		XMVECTOR vertPos = XMVectorSet(meshes[0].verts[i].xyz.x, meshes[0].verts[i].xyz.y, meshes[0].verts[i].xyz.z, 1.f);// = XMLoadFloat3(&meshes[0].verts[i].xyz);
 		XMVECTOR tempVert;
-		tempVert = XMVector4Transform(vertPos, boneOffsets[vertOut[i].bone.x]) * meshes[0].verts[i].weights.x;
-		tempVert += XMVector4Transform(vertPos, boneOffsets[vertOut[i].bone.y]) * meshes[0].verts[i].weights.y;
-		tempVert += XMVector4Transform(vertPos, boneOffsets[vertOut[i].bone.z]) * meshes[0].verts[i].weights.z;
-		tempVert += XMVector4Transform(vertPos, boneOffsets[vertOut[i].bone.w]) * meshes[0].verts[i].weights.w;
+		tempVert = XMVector4Transform(vertPos, blender.GetSkinningMatrix(vertOut[i].bone.x) * meshes[0].verts[i].weights.x);
+		tempVert += XMVector4Transform(vertPos, blender.GetSkinningMatrix(vertOut[i].bone.y) * meshes[0].verts[i].weights.y);
+		tempVert += XMVector4Transform(vertPos, blender.GetSkinningMatrix(vertOut[i].bone.z) * meshes[0].verts[i].weights.z);
+		tempVert += XMVector4Transform(vertPos, blender.GetSkinningMatrix(vertOut[i].bone.w) * meshes[0].verts[i].weights.w);
 		
 		XMStoreFloat3(&vertOut[i].xyz, tempVert);
 	}
-	
-	// ANOTHER ATTEMPT AT SMOOTH SKINNING
-	//for (size_t i = 0; i < meshes[0].verts.size(); i++)
-	//{
-	//	XMVECTOR vertPos = XMLoadFloat3(&meshes[0].verts[i].xyz);
-	//	XMVECTOR tempVert;
-	//	tempVert = boneOffsets[meshes[0].verts[i].bone.x].r[3] * vertPos;
-	//	tempVert *= meshes[0].verts[i].weights.x;
-	//	tempVert+= boneOffsets[meshes[0].verts[i].bone.y].r[3] * vertPos * meshes[0].verts[i].weights.y;
-	//	tempVert+= boneOffsets[meshes[0].verts[i].bone.z].r[3] * vertPos * meshes[0].verts[i].weights.z;
-	//	tempVert+= boneOffsets[meshes[0].verts[i].bone.w].r[3] * vertPos * meshes[0].verts[i].weights.w;
-	//	XMStoreFloat3(&vertOut[i].xyz, tempVert);
-	//}
 
 	// RESETTING VERTEX BUFFER
 	D3D11_BUFFER_DESC vertexBufferDesc;
@@ -230,7 +198,7 @@ void MeshClass::Render(ID3D11DeviceContext* deviceContext, ID3D11DepthStencilVie
 	vertexBufferDesc.Usage = D3D11_USAGE_IMMUTABLE;
 	vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 	vertexBufferDesc.CPUAccessFlags = NULL;
-	vertexBufferDesc.ByteWidth = sizeof(Vertex) * meshes[0].verts.size();
+	vertexBufferDesc.ByteWidth = sizeof(Vertex) * (UINT)meshes[0].verts.size();
 	vertexBufferDesc.MiscFlags = 0;
 	
 	D3D11_SUBRESOURCE_DATA initialDataVertex;
@@ -238,26 +206,6 @@ void MeshClass::Render(ID3D11DeviceContext* deviceContext, ID3D11DepthStencilVie
 	
 	HRESULT hr;
 	hr = device->CreateBuffer(&vertexBufferDesc, &initialDataVertex, &vertexBuffer);
-
-	// SWITCHING ANIMATION
-	if (GetAsyncKeyState(VK_TAB) && pressed != true)
-	{
-		pressed = true;
-		//interp.SWITCH = true;
-		if (interp.GetAnimPtr() == &animations[0])
-			//interp.SwitchAnimation(&animations[1]);
-			interp.SetAnimPtr(&animations[1]);
-		else
-			//interp.SwitchAnimation(&animations[0]);
-			interp.SetAnimPtr(&animations[0]);
-	}
-	
-	if (!GetAsyncKeyState(VK_TAB))
-		pressed = false;
-	
-	// UPDATING BONE DATA
-	for (UINT i = 0; i < keyframe.bones.size(); i++)
-		XMStoreFloat4x4(&boneSpheres[i]->worldMatrix.objectMatrix, XMMatrixMultiply(boneScaleMatrix, keyframe.bones[i]));
 
 	// RENDER BONES
 	for (unsigned int i = 0; i < boneSpheres.size(); i++)

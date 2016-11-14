@@ -9,6 +9,7 @@
 #include <vector>
 #include <stdio.h>
 #include "modelClass.h"
+#include "Blender.h"
 
 using namespace DirectX;
 using namespace std;
@@ -61,7 +62,8 @@ protected:
 	ID3D11RasterizerState* p_rsSolid;
 	ID3D11RasterizerState* p_rsWireframe;
 
-	Interpolator interp;
+	Interpolator interp, interp2;
+	Blender blender;
 
 	struct SEND_TO_OBJECT
 	{
@@ -78,6 +80,5 @@ public:
 	void Initialize(ID3D11Device* device);
 	void Render(ID3D11DeviceContext* deviceContext, ID3D11DepthStencilView* p_dsView, ID3D11Device* device, float delta);
 	void Shutdown();
-	bool pressed = false;
 	//bool loadOBJ(const char* _path, vector<OBJ_VERT>& out_vertices, vector<UINT>& out_indices);
 };
