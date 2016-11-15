@@ -56,7 +56,7 @@ void MeshClass::Initialize(ID3D11Device* device)
 	interp2.SetAnimPtr(&animations[1]);
 	blender.SetAnim(&interp);
 	blender.SetNextAnim(&interp2);
-	blender.SetBones(transformHierarchy.size());
+	blender.SetBones((int)transformHierarchy.size());
 
 	worldMatrix.objectMatrix = IdentityMatrix;
 
