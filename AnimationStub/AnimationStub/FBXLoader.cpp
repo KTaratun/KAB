@@ -540,7 +540,7 @@ namespace FBXLoader
 			DirectX::XMFLOAT3 currPosition;
 			currPosition.x = (float)(mesh->GetControlPointAt((int)i).mData[0]);
 			currPosition.y = (float)(mesh->GetControlPointAt((int)i).mData[1]);
-			currPosition.z = (float)(mesh->GetControlPointAt((int)i).mData[2]);
+			currPosition.z = -(float)(mesh->GetControlPointAt((int)i).mData[2]);
 			currCtrlPoint->pos = currPosition;
 			cPs.push_back(currCtrlPoint);
 		}
@@ -589,7 +589,7 @@ namespace FBXLoader
 				vert.xyz.z = (float)-CPs[ctrlPointIndex].mData[2]; // z
 
 				int uVIndex = fbx_mesh->GetTextureUVIndex(polyIndex, vertIndex);
-				vert.uvw.x = -(float)UVs->GetAt(uVIndex).mData[0]; // u
+				vert.uvw.x = (float)UVs->GetAt(uVIndex).mData[0]; // u
 				vert.uvw.y = 1 - (float)UVs->GetAt(uVIndex).mData[1]; // v
 				vert.uvw.z = 0; // w
 
