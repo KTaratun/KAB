@@ -37,8 +37,8 @@ void MeshClass::Initialize(ID3D11Device* device)
 	std::vector<Mesh> m;
 	string a;
 
-	FBXLoader::Load("Box_Idle.fbx", meshes, transformHierarchy, animations, a); // all bones from both .fbxs are being concatenated
-	FBXLoader::Load("Box_Jump.fbx", m, tn, animations, a); // tn is literally doing nothing
+	FBXLoader::Load("Battle Mage with Rig and textures.fbx", meshes, transformHierarchy, animations, a); // all bones from both .fbxs are being concatenated
+	FBXLoader::Load("Death.fbx", m, tn, animations, a); // tn is literally doing nothing
 	
 	for (UINT i = 0; i < transformHierarchy.size(); i++)
 	{
@@ -101,7 +101,7 @@ void MeshClass::Initialize(ID3D11Device* device)
 
 	device->CreateBuffer(&objectConstantBufferDesc, NULL, &constantBuffer);
 
-	CreateDDSTextureFromFile(device, L"TestCube.dds", nullptr, &shaderResourceView);
+	CreateDDSTextureFromFile(device, L"PPG_3D_Player_N.dds", nullptr, &shaderResourceView);
 	//const wchar_t* tex = (const wchar_t*)texture_name.c_str();
 	//CreateWICTextureFromFile(device, tex, nullptr, &shaderResourceView);
 
@@ -155,6 +155,37 @@ void MeshClass::Render(ID3D11DeviceContext* deviceContext, ID3D11DepthStencilVie
 
 	deviceContext->VSSetConstantBuffers(0, 1, &constantBuffer);
 
+	keyFrame = blender.Update(delta, meshes[0].verts, transformHierarchy);
+	std::vector<Vertex> vertOut = meshes[0].verts;
+
+	// ROUGHLY MATH FOR SMOOTH ShINNING
+	for (size_t i = 0; i < vertOut.size(); i++)
+	{
+		XMVECTOR vertPos = XMVectorSet(meshes[0].verts[i].xyz.x, meshes[0].verts[i].xyz.y, meshes[0].verts[i].xyz.z, 1.f);// = XMLoadFloat3(&meshes[0].verts[i].xyz);
+		XMVECTOR tempVert;
+		tempVert = XMVector4Transform(vertPos, blender.GetSkinningMatrix(vertOut[i].bone.x) * meshes[0].verts[i].weights.x);
+		tempVert += XMVector4Transform(vertPos, blender.GetSkinningMatrix(vertOut[i].bone.y) * meshes[0].verts[i].weights.y);
+		tempVert += XMVector4Transform(vertPos, blender.GetSkinningMatrix(vertOut[i].bone.z) * meshes[0].verts[i].weights.z);
+		tempVert += XMVector4Transform(vertPos, blender.GetSkinningMatrix(vertOut[i].bone.w) * meshes[0].verts[i].weights.w);
+
+		XMStoreFloat3(&vertOut[i].xyz, tempVert);
+	}
+
+	// RESETTING VERTEX BUFFER
+	D3D11_BUFFER_DESC vertexBufferDesc;
+	ZeroMemory(&vertexBufferDesc, sizeof(vertexBufferDesc));
+	vertexBufferDesc.Usage = D3D11_USAGE_IMMUTABLE;
+	vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	vertexBufferDesc.CPUAccessFlags = NULL;
+	vertexBufferDesc.ByteWidth = sizeof(Vertex) * (UINT)meshes[0].verts.size();
+	vertexBufferDesc.MiscFlags = 0;
+
+	D3D11_SUBRESOURCE_DATA initialDataVertex;
+	initialDataVertex.pSysMem = vertOut.data();
+
+	HRESULT hr;
+	hr = device->CreateBuffer(&vertexBufferDesc, &initialDataVertex, &vertexBuffer);
+
 	UINT stride = sizeof(Vertex);
 	UINT offset = 0;
 	deviceContext->IASetVertexBuffers(0, 1, &vertexBuffer, &stride, &offset);
@@ -175,41 +206,12 @@ void MeshClass::Render(ID3D11DeviceContext* deviceContext, ID3D11DepthStencilVie
 	deviceContext->RSSetState(p_rsWireframe);
 	deviceContext->Draw((UINT)meshes[0].verts.size(), 0);
 	deviceContext->RSSetState(p_rsSolid);
-
-	blender.Update(delta, meshes[0].verts, transformHierarchy);
-	std::vector<Vertex> vertOut = meshes[0].verts;
-
-	// ROUGHLY MATH FOR SMOOTH SKINNING
-	for (size_t i = 0; i < vertOut.size(); i++)
-	{
-		XMVECTOR vertPos = XMVectorSet(meshes[0].verts[i].xyz.x, meshes[0].verts[i].xyz.y, meshes[0].verts[i].xyz.z, 1.f);// = XMLoadFloat3(&meshes[0].verts[i].xyz);
-		XMVECTOR tempVert;
-		tempVert = XMVector4Transform(vertPos, blender.GetSkinningMatrix(vertOut[i].bone.x) * meshes[0].verts[i].weights.x);
-		tempVert += XMVector4Transform(vertPos, blender.GetSkinningMatrix(vertOut[i].bone.y) * meshes[0].verts[i].weights.y);
-		tempVert += XMVector4Transform(vertPos, blender.GetSkinningMatrix(vertOut[i].bone.z) * meshes[0].verts[i].weights.z);
-		tempVert += XMVector4Transform(vertPos, blender.GetSkinningMatrix(vertOut[i].bone.w) * meshes[0].verts[i].weights.w);
-		
-		XMStoreFloat3(&vertOut[i].xyz, tempVert);
-	}
-
-	// RESETTING VERTEX BUFFER
-	D3D11_BUFFER_DESC vertexBufferDesc;
-	ZeroMemory(&vertexBufferDesc, sizeof(vertexBufferDesc));
-	vertexBufferDesc.Usage = D3D11_USAGE_IMMUTABLE;
-	vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-	vertexBufferDesc.CPUAccessFlags = NULL;
-	vertexBufferDesc.ByteWidth = sizeof(Vertex) * (UINT)meshes[0].verts.size();
-	vertexBufferDesc.MiscFlags = 0;
-	
-	D3D11_SUBRESOURCE_DATA initialDataVertex;
-	initialDataVertex.pSysMem = vertOut.data();
-	
-	HRESULT hr;
-	hr = device->CreateBuffer(&vertexBufferDesc, &initialDataVertex, &vertexBuffer);
-
+	for (UINT i = 0; i < keyFrame.bones.size(); i++)
+	XMStoreFloat4x4(&boneSpheres[i]->worldMatrix.objectMatrix, XMMatrixMultiply(boneScaleMatrix, keyFrame.bones[i]));
 	// RENDER BONES
 	for (unsigned int i = 0; i < boneSpheres.size(); i++)
 		boneSpheres[i]->Render(deviceContext, delta);
+
 }
 
 void MeshClass::Shutdown()

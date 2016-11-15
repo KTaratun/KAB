@@ -114,6 +114,8 @@ namespace FBXLoader
 	void CalculateTangentBinormal(Vertex vertex1, Vertex vertex2, Vertex vertex3, XMFLOAT3* tangent, XMFLOAT3* binormal);
 	void CalculateNormal(XMFLOAT3 tangent, XMFLOAT3 binormal, XMFLOAT3& normal);
 
+	void ReadNormal(FbxMesh* inMesh, int inCtrlPointIndex, int inVertexCounter, XMFLOAT3& outNormal);
+
 
 	bool BinaryOut(std::vector<Vertex>&inVertexVector, FbxIOFileHeaderInfo& fileheader, const char* _Filename)
 	{
@@ -497,11 +499,6 @@ namespace FBXLoader
 					transformHierarchy[j].AddChild(&transformHierarchy[i]);
 					break;
 				}
-
-
-			//temp.child = transformHierarchy[i]
-
-			//Set Transform Node based on the corresponding fbx_joint's GetParent() return
 		}
 
 		return true;
@@ -583,10 +580,14 @@ namespace FBXLoader
 
 			for (int vertIndex = 0; vertIndex < vertCount; vertIndex++)
 			{
+				XMFLOAT3 normal;
+
 				int ctrlPointIndex = fbx_mesh->GetPolygonVertex(polyIndex, vertIndex);
+				ReadNormal(fbx_mesh, ctrlPointIndex, vertexCounter, normal);
+				
 				vert.xyz.x = (float)CPs[ctrlPointIndex].mData[0]; // x
 				vert.xyz.y = (float)CPs[ctrlPointIndex].mData[1]; // y
-				vert.xyz.z = (float)-CPs[ctrlPointIndex].mData[2]; // z
+				vert.xyz.z = (float)CPs[ctrlPointIndex].mData[2]; // z
 
 				int uVIndex = fbx_mesh->GetTextureUVIndex(polyIndex, vertIndex);
 				vert.uvw.x = (float)UVs->GetAt(uVIndex).mData[0]; // u
@@ -625,9 +626,11 @@ namespace FBXLoader
 				vert.bone.z = cps[ctrlPointIndex]->blendingInfo[2].blendingIndex;
 				vert.bone.w = cps[ctrlPointIndex]->blendingInfo[3].blendingIndex;
 
-				vert.normals.x = (float)normals.mData[0];
-				vert.normals.y = (float)normals.mData[1];
-				vert.normals.z = -(float)normals.mData[2];
+				vert.normals = normal;
+				//vert.normals.x = (float)normals.mData[0];
+				//vert.normals.y = (float)normals.mData[1];
+				//vert.normals.z = -(float)normals.mData[2];
+
 				if (biNormalElement != NULL)
 				{
 					vert.bin.x = (float)binormals.mData[0];
@@ -648,12 +651,15 @@ namespace FBXLoader
 				//control_point_indices.push_back(ctrlPointIndex);
 				//mesh.verts.push_back(vert);
 	
-				if (vertIndex == 0)
-					mesh.verts[(polyIndex * 3) + 1] = vert;
-				else if (vertIndex == 1)
-					mesh.verts[(polyIndex * 3) + 0] = vert;
-				else
-					mesh.verts[(polyIndex * 3) + 2] = vert;
+				//if (vertIndex == 0)
+				//	mesh.verts[(polyIndex * 3) + 1] = vert;
+				//else if (vertIndex == 1)
+				//	mesh.verts[(polyIndex * 3) + 0] = vert;
+				//else
+				//	mesh.verts[(polyIndex * 3) + 2] = vert;
+				mesh.verts[(polyIndex * 3) + vertIndex] = vert;
+
+				vertexCounter++;
 			}
 			//CalculateTangentBinormal(mesh.verts[mesh.verts.size - 1], mesh.verts[mesh.verts.size - 2], mesh.verts[mesh.verts.size - 3], )
 		}
@@ -898,12 +904,12 @@ namespace FBXLoader
 				FbxAMatrix geometryTransform = GetGeometryTransformation(fbx_joints[j]);
 				FbxAMatrix currentTransformOffset = fbx_joints[j]->EvaluateGlobalTransform(currTime) * geometryTransform;
 
-				currentTransformOffset.mData[0][2] *= -1;
-				currentTransformOffset.mData[1][2] *= -1;
-				currentTransformOffset.mData[2][0] *= -1;
-				currentTransformOffset.mData[2][1] *= -1;
-				currentTransformOffset.mData[2][3] *= -1;
-				currentTransformOffset.mData[3][2] *= -1;
+				//currentTransformOffset.mData[0][2] *= -1;
+				//currentTransformOffset.mData[1][2] *= -1;
+				//currentTransformOffset.mData[2][0] *= -1;
+				//currentTransformOffset.mData[2][1] *= -1;
+				//currentTransformOffset.mData[2][3] *= -1;
+				//currentTransformOffset.mData[3][2] *= -1;
 
 				//currentTransformOffset *= *geometryTransform;
 				//currAnim->SetGlobalTransform(currentTransformOffset.Inverse() * fbx_joints[j]->EvaluateGlobalTransform(currTime));
@@ -1115,4 +1121,68 @@ namespace FBXLoader
 
 		return;
 	}
+
+
+	void ReadNormal(FbxMesh* inMesh, int inCtrlPointIndex, int inVertexCounter, XMFLOAT3& outNormal)
+	{
+		if (inMesh->GetElementNormalCount() < 1)
+		{
+			throw std::exception("Invalid Normal Number");
+		}
+
+		FbxGeometryElementNormal* vertexNormal = inMesh->GetElementNormal(0);
+		switch (vertexNormal->GetMappingMode())
+		{
+		case FbxGeometryElement::eByControlPoint:
+			switch (vertexNormal->GetReferenceMode())
+			{
+			case FbxGeometryElement::eDirect:
+			{
+				outNormal.x = static_cast<float>(vertexNormal->GetDirectArray().GetAt(inCtrlPointIndex).mData[0]);
+				outNormal.y = static_cast<float>(vertexNormal->GetDirectArray().GetAt(inCtrlPointIndex).mData[1]);
+				outNormal.z = static_cast<float>(vertexNormal->GetDirectArray().GetAt(inCtrlPointIndex).mData[2]);
+			}
+			break;
+
+			case FbxGeometryElement::eIndexToDirect:
+			{
+				int index = vertexNormal->GetIndexArray().GetAt(inCtrlPointIndex);
+				outNormal.x = static_cast<float>(vertexNormal->GetDirectArray().GetAt(index).mData[0]);
+				outNormal.y = static_cast<float>(vertexNormal->GetDirectArray().GetAt(index).mData[1]);
+				outNormal.z = static_cast<float>(vertexNormal->GetDirectArray().GetAt(index).mData[2]);
+			}
+			break;
+
+			default:
+				throw std::exception("Invalid Reference");
+			}
+			break;
+
+		case FbxGeometryElement::eByPolygonVertex:
+			switch (vertexNormal->GetReferenceMode())
+			{
+			case FbxGeometryElement::eDirect:
+			{
+				outNormal.x = static_cast<float>(vertexNormal->GetDirectArray().GetAt(inVertexCounter).mData[0]);
+				outNormal.y = static_cast<float>(vertexNormal->GetDirectArray().GetAt(inVertexCounter).mData[1]);
+				outNormal.z = static_cast<float>(vertexNormal->GetDirectArray().GetAt(inVertexCounter).mData[2]);
+			}
+			break;
+
+			case FbxGeometryElement::eIndexToDirect:
+			{
+				int index = vertexNormal->GetIndexArray().GetAt(inVertexCounter);
+				outNormal.x = static_cast<float>(vertexNormal->GetDirectArray().GetAt(index).mData[0]);
+				outNormal.y = static_cast<float>(vertexNormal->GetDirectArray().GetAt(index).mData[1]);
+				outNormal.z = static_cast<float>(vertexNormal->GetDirectArray().GetAt(index).mData[2]);
+			}
+			break;
+
+			default:
+				throw std::exception("Invalid Reference");
+			}
+			break;
+		}
+	}
+
 };
