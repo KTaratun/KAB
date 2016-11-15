@@ -7,7 +7,7 @@
 
 using namespace DirectX;
 
-Interpolator::Interpolator() : animPtr(nullptr)//, animPtr2(nullptr)
+Interpolator::Interpolator() : animPtr(nullptr)
 {
 	currentFrame = NULL;
 	currentTime = 0;
@@ -57,14 +57,6 @@ KeyFrame Interpolator::Process(float time) // time should be added
 
 	float delta = 1 - (tweenTime / frameTime);
 	//float timeDelta = frameTime / tweenTime;
-
-	//if (SWITCH)
-	//{
-	//	KeyFrame newCurr = Interpolate(currentFrame, currentFrame->GetNext(), delta);
-	//	KeyFrame next = Interpolate(animPtr->keyFrames[0], animPtrs[1]->keyFrames[1], delta);
-	//	currentFrame->bones = Interpolate(currentFrame, currentFrame->GetNext(), delta).bones;
-	//	return *currentFrame;
-	//}
 
 	return Interpolate(currentFrame, currentFrame->GetNext(), delta);
 

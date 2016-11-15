@@ -4,6 +4,7 @@
 void Blender::SetBones(int numBones)
 {
 	boneOffsetArray.resize(numBones);
+	blendTime = 0;
 }
 
 XMMATRIX Blender::GetSkinningMatrix(int index)
@@ -26,20 +27,31 @@ void Blender::Update(float delta, std::vector<Vertex> verts, std::vector<Transfo
 	KeyFrame keyFrame = currAnim->Process(delta);
 
 	// SWITCHING ANIMATION
-	//if (GetAsyncKeyState(VK_TAB) && pressed != true)
-	//{
-	//	pressed = true;
-	//	//interp.SWITCH = true;
-	//	if (interp.GetAnimPtr() == &animations[0])
-	//		//interp.SwitchAnimation(&animations[1]);
-	//		interp.SetAnimPtr(&animations[1]);
-	//	else
-	//		//interp.SwitchAnimation(&animations[0]);
-	//		interp.SetAnimPtr(&animations[0]);
-	//}
-	//
-	//if (!GetAsyncKeyState(VK_TAB))
-	//	pressed = false;
+	if (GetAsyncKeyState(VK_TAB) && pressed != true && blendTime <= 0)
+	{
+		blendTime = .2;
+		pressed = true;
+	}
+	else if (!GetAsyncKeyState(VK_TAB))
+		pressed = false;
+
+	if (blendTime > 0)
+	{
+		blendTime -= delta;
+		float aniTransitionTime = .2f;
+		float tweenTime = aniTransitionTime - blendTime;
+		float lambda = (tweenTime / aniTransitionTime);
+
+		KeyFrame NextAniFrame = nextAnim->Process(delta);
+		keyFrame = currAnim->Interpolate(&keyFrame, &NextAniFrame, lambda);
+
+		if (blendTime <= 0)
+		{
+			Interpolator* temp = currAnim;
+			currAnim = nextAnim;
+			nextAnim = temp;
+		}
+	}
 	
 	// SETTING UP BONE OFFSETS
 	for (size_t i = 0; i < hierarchy.size(); i++)
