@@ -416,7 +416,7 @@ namespace FBXLoader
 		{
 			// Get the current animation stack
 			anim_stack = scene->GetSrcObject< FbxAnimStack >(i);
-		
+
 			FbxString animStackName = anim_stack->GetName();
 			ani.SetName(animStackName.Buffer());
 
@@ -596,7 +596,9 @@ namespace FBXLoader
 				int normIndex = 0, binormIndex = 0, tangentIndex = 0;
 
 				if (normalElement->GetReferenceMode() == FbxGeometryElement::eDirect)
-					normIndex = normalElement->GetIndexArray().GetAt(vertIndex);
+					normIndex = vertIndex;
+				else
+					normalElement->GetIndexArray().GetAt(vertIndex);
 				if (biNormalElement != NULL)
 					binormIndex = biNormalElement->GetIndexArray().GetAt(vertIndex);
 				if (tangentElement != NULL)
@@ -639,15 +641,15 @@ namespace FBXLoader
 					vert.tan.x = (float)tangents.mData[0];
 					vert.tan.y = (float)tangents.mData[1];
 					vert.tan.z = -(float)tangents.mData[2];
-				CalculateNormal(vert.tan, vert.bin, vert.normals); 
 				}
+				CalculateNormal(vert.tan, vert.bin, vert.normals);
 
 				//CalculateTangentBinormal()
 				//CalculateTangentBinormal(, vert, vert, &vert.tan, &vert.bin);
 
 				//control_point_indices.push_back(ctrlPointIndex);
 				//mesh.verts.push_back(vert);
-	
+
 				if (vertIndex == 0)
 					mesh.verts[(polyIndex * 3) + 1] = vert;
 				else if (vertIndex == 1)

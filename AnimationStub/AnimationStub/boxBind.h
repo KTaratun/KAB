@@ -50,6 +50,7 @@ protected:
 	ID3D11Buffer* vertexBuffer = NULL;
 	ID3D11Buffer* indexBuffer = NULL;
 	ID3D11Buffer* constantBuffer = NULL;
+	ID3D11Buffer* boneBuffer = NULL;
 	ID3D11InputLayout* inputLayout = NULL;
 	ID3D11VertexShader* vertexShader;
 	ID3D11PixelShader* pixelShader;
@@ -70,7 +71,13 @@ protected:
 		XMFLOAT4X4 objectMatrix;
 	};
 
+	struct BBUFFER
+	{
+		XMFLOAT4X4 boneOffsets[4];
+	};
+
 	SEND_TO_OBJECT worldMatrix;
+	BBUFFER boneOffset;
 
 public:
 

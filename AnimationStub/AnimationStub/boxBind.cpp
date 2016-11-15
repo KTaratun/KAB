@@ -101,6 +101,17 @@ void MeshClass::Initialize(ID3D11Device* device)
 
 	device->CreateBuffer(&objectConstantBufferDesc, NULL, &constantBuffer);
 
+	D3D11_BUFFER_DESC boneBufferDesc;
+	ZeroMemory(&boneBufferDesc, sizeof(boneBufferDesc));
+	boneBufferDesc.ByteWidth = sizeof(XMFLOAT4X4) * transformHierarchy.size();
+	boneBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+	boneBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	boneBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	boneBufferDesc.MiscFlags = 0;
+	boneBufferDesc.StructureByteStride = 0;
+
+	device->CreateBuffer(&boneBufferDesc, NULL, &boneBuffer);
+
 	CreateDDSTextureFromFile(device, L"TestCube.dds", nullptr, &shaderResourceView);
 	//const wchar_t* tex = (const wchar_t*)texture_name.c_str();
 	//CreateWICTextureFromFile(device, tex, nullptr, &shaderResourceView);
@@ -135,6 +146,11 @@ void MeshClass::Initialize(ID3D11Device* device)
 	objMat = XMMatrixMultiply(scaleMat, objMat);
 
 	XMStoreFloat4x4(&worldMatrix.objectMatrix, objMat);
+
+	for (UINT i = 0; i < 4; i++)
+	{
+		boneOffset.boneOffsets[i] = IdentityMatrix;
+	}
 	
 	for (UINT i = 0; i < boneMatrices.size(); i++)
 	{
@@ -154,6 +170,14 @@ void MeshClass::Render(ID3D11DeviceContext* deviceContext, ID3D11DepthStencilVie
 	deviceContext->Unmap(constantBuffer, NULL);
 
 	deviceContext->VSSetConstantBuffers(0, 1, &constantBuffer);
+
+	D3D11_MAPPED_SUBRESOURCE boneRes;
+	deviceContext->Map(boneBuffer, NULL, D3D11_MAP_WRITE_DISCARD, NULL, &boneRes);
+	memcpy(boneRes.pData, &boneOffset, sizeof(BBUFFER));
+	deviceContext->Unmap(boneBuffer, NULL);
+
+	deviceContext->VSSetConstantBuffers(2, 1, &boneBuffer);
+
 
 	UINT stride = sizeof(Vertex);
 	UINT offset = 0;
@@ -190,6 +214,7 @@ void MeshClass::Render(ID3D11DeviceContext* deviceContext, ID3D11DepthStencilVie
 		tempVert += XMVector4Transform(vertPos, blender.GetSkinningMatrix(vertOut[i].bone.w) * meshes[0].verts[i].weights.w);
 		
 		XMStoreFloat3(&vertOut[i].xyz, tempVert);
+
 	}
 
 	// RESETTING VERTEX BUFFER
@@ -206,6 +231,8 @@ void MeshClass::Render(ID3D11DeviceContext* deviceContext, ID3D11DepthStencilVie
 	
 	HRESULT hr;
 	hr = device->CreateBuffer(&vertexBufferDesc, &initialDataVertex, &vertexBuffer);
+	//RELEASE_COM(vertexBuffer);
+
 
 	// RENDER BONES
 	for (unsigned int i = 0; i < boneSpheres.size(); i++)

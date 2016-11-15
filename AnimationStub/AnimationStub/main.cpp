@@ -543,6 +543,7 @@ bool APP::ShutDown()
 	p_dsView->Release();
 	p_rsSolid->Release();
 	p_rsWireframe->Release();
+	
 
 	UnregisterClass(L"DirectXApplication", h_application);
 	return true;
