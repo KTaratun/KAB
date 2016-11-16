@@ -6,6 +6,8 @@ struct P_IN
 {
 	float3 uv : TEXCOORD;
 	float3 normal : NORMALS;
+	float3 binormal : BINORMALS;
+	float3 tangent : TANGENT;
 	float4 position : SV_POSITION;
 	float3 WorldPos : TEXCOORD1;
 };

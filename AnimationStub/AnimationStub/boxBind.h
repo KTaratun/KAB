@@ -72,9 +72,14 @@ protected:
 		XMFLOAT4X4 objectMatrix;
 	};
 
-	struct BBUFFER
+	struct BONES
 	{
-		XMFLOAT4X4 boneOffsets[4];
+		XMFLOAT4X4 b1, b2, b3, b4;
+	};
+	union BBUFFER
+	{
+		XMFLOAT4X4 boneOffsets[28];
+		BONES bones;
 	};
 
 	SEND_TO_OBJECT worldMatrix;

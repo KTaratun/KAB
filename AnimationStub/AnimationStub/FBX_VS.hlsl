@@ -13,6 +13,8 @@ struct V_OUT
 {
 	float3 uvOut : TEXCOORD;
 	float3 normalOut : NORMALS;
+	float3 binormalOut : BINORMALS;
+	float3 tangentOut : TANGENT;
 	float4 positionOut : SV_POSITION;
 	float3 WorldPos : TEXCOORD1;
 };
@@ -30,7 +32,7 @@ cbuffer SCENE : register(b1)
 
 cbuffer BOFFSET : register(b2)
 {
-	float4x4 BoneOffset[4];
+	float4x4 BoneOffset[28];
 }
 
 V_OUT main(V_IN input)
@@ -39,21 +41,40 @@ V_OUT main(V_IN input)
 	float4 localH;
 	float4 posWorld = mul(worldMatrix, float4(input.positionIn, 1));
 
-	//localH = mul(BoneOffset[input.boneIn.x], float4(input.positionIn.x, input.positionIn.y, input.positionIn.z, 1)*input.weightIn.x);
-	//localH += mul(BoneOffset[input.boneIn.y], float4(input.positionIn.x, input.positionIn.y, input.positionIn.z, 1)*input.weightIn.y);
-	//localH += mul(BoneOffset[input.boneIn.z], float4(input.positionIn.x, input.positionIn.y, input.positionIn.z, 1)*input.weightIn.z);
-	//localH += mul(BoneOffset[input.boneIn.w], float4(input.positionIn.x, input.positionIn.y, input.positionIn.z, 1)*input.weightIn.w);
+	//float4 tempVert;
 
-	localH = mul(worldMatrix, float4(input.positionIn, 1));
+	localH = mul(BoneOffset[input.boneIn.x], float4(input.positionIn.x, input.positionIn.y, input.positionIn.z, 1)*input.weightIn.x);
+	localH += mul(BoneOffset[input.boneIn.y], float4(input.positionIn.x, input.positionIn.y, input.positionIn.z, 1)*input.weightIn.y);
+	localH += mul(BoneOffset[input.boneIn.z], float4(input.positionIn.x, input.positionIn.y, input.positionIn.z, 1)*input.weightIn.z);
+	localH += mul(BoneOffset[input.boneIn.w], float4(input.positionIn.x, input.positionIn.y, input.positionIn.z, 1)*input.weightIn.w);
+
+	//localH = mul(tempVert,localH);
+	localH = mul(worldMatrix, localH);
+
 	localH = mul(viewMatrix, localH);
 	localH = mul(projectionMatrix, localH);
-
 	output.positionOut = localH;
+
+	float4 tempBi;
+	tempBi = mul(BoneOffset[input.boneIn.x], float4(input.binormalIn.x, input.binormalIn.y, input.binormalIn.z, 0)*input.weightIn.x);
+	tempBi += mul(BoneOffset[input.boneIn.y], float4(input.binormalIn.x, input.binormalIn.y, input.binormalIn.z, 0)*input.weightIn.y);
+	tempBi += mul(BoneOffset[input.boneIn.z], float4(input.binormalIn.x, input.binormalIn.y, input.binormalIn.z, 0)*input.weightIn.z);
+	tempBi += mul(BoneOffset[input.boneIn.w], float4(input.binormalIn.x, input.binormalIn.y, input.binormalIn.z, 0)*input.weightIn.w);
+	output.binormalOut = tempBi;
+
+	float4 tempTan;
+	tempTan = mul(BoneOffset[input.boneIn.x], float4(input.tangentIn.x, input.tangentIn.y, input.tangentIn.z, 0)*input.weightIn.x);
+	tempTan += mul(BoneOffset[input.boneIn.y], float4(input.tangentIn.x, input.tangentIn.y, input.tangentIn.z, 0)*input.weightIn.y);
+	tempTan += mul(BoneOffset[input.boneIn.z], float4(input.tangentIn.x, input.tangentIn.y, input.tangentIn.z, 0)*input.weightIn.z);
+	tempTan += mul(BoneOffset[input.boneIn.w], float4(input.tangentIn.x, input.tangentIn.y, input.tangentIn.z, 0)*input.weightIn.w);
+	output.tangentOut = tempTan;
+
+
 
 	output.uvOut = input.uvIn;
 
 	output.normalOut = mul(input.normalIn, (float3x3)worldMatrix);
-	output.normalOut = normalize(output.normalOut);
+	//output.normalOut = normalize(output.normalOut);
 
 	//	tempVert = XMVector4Transform(vertPos, blender.GetSkinningMatrix(vertOut[i].bone.x) * meshes[0].verts[i].weights.x);
 	//	tempVert += XMVector4Transform(vertPos, blender.GetSkinningMatrix(vertOut[i].bone.y) * meshes[0].verts[i].weights.y);

@@ -149,7 +149,7 @@ APP::APP(HINSTANCE hinst, WNDPROC proc)
 	m4x4_camTranslate = m4x4_Identity;
 
 	//Lights
-	light_data.diffuse_ambientLight = { 0.2f,0.2f,0.2f,1 };
+	light_data.diffuse_ambientLight = { 0.6f,0.6f,0.6f,1 };
 
 	light_data.diffuse_spotLight = { 1,1,1,1 };
 
