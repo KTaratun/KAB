@@ -30,7 +30,7 @@ cbuffer SCENE : register(b1)
 
 cbuffer BOFFSET : register(b2)
 {
-	float4x4 BoneOffset[28];
+	float4x4 BoneOffset[4];
 }
 
 V_OUT main(V_IN input)
@@ -38,6 +38,12 @@ V_OUT main(V_IN input)
 	V_OUT output = (V_OUT)0;
 	float4 localH;
 	float4 posWorld = mul(worldMatrix, float4(input.positionIn, 1));
+
+	//localH = mul(BoneOffset[input.boneIn.x], float4(input.positionIn.x, input.positionIn.y, input.positionIn.z, 1)*input.weightIn.x);
+	//localH += mul(BoneOffset[input.boneIn.y], float4(input.positionIn.x, input.positionIn.y, input.positionIn.z, 1)*input.weightIn.y);
+	//localH += mul(BoneOffset[input.boneIn.z], float4(input.positionIn.x, input.positionIn.y, input.positionIn.z, 1)*input.weightIn.z);
+	//localH += mul(BoneOffset[input.boneIn.w], float4(input.positionIn.x, input.positionIn.y, input.positionIn.z, 1)*input.weightIn.w);
+
 	localH = mul(worldMatrix, float4(input.positionIn, 1));
 	localH = mul(viewMatrix, localH);
 	localH = mul(projectionMatrix, localH);
@@ -58,11 +64,8 @@ V_OUT main(V_IN input)
 	//output.normalOut = input.normalIn;
 	output.WorldPos = float3(posWorld.x, posWorld.y, posWorld.z);
 
-	float4 tempVert;
-	tempVert = mul(BoneOffset[input.boneIn.x], float4(input.positionIn.x, input.positionIn.y, input.positionIn.z, 1)*input.weightIn.x);
-	tempVert += mul(BoneOffset[input.boneIn.y], float4(input.positionIn.x, input.positionIn.y, input.positionIn.z, 1)*input.weightIn.y);
-	tempVert += mul(BoneOffset[input.boneIn.z], float4(input.positionIn.x, input.positionIn.y, input.positionIn.z, 1)*input.weightIn.z);
-	tempVert += mul(BoneOffset[input.boneIn.w], float4(input.positionIn.x, input.positionIn.y, input.positionIn.z, 1)*input.weightIn.w);
+	//float4 tempVert;
+
 
 	//output.positionOut = tempVert;
 

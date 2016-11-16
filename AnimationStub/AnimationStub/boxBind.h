@@ -74,7 +74,7 @@ protected:
 
 	struct BBUFFER
 	{
-		XMFLOAT4X4 boneOffsets[28];
+		XMFLOAT4X4 boneOffsets[4];
 	};
 
 	SEND_TO_OBJECT worldMatrix;

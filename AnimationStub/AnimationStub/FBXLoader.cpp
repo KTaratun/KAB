@@ -587,10 +587,10 @@ namespace FBXLoader
 				
 				vert.xyz.x = (float)CPs[ctrlPointIndex].mData[0]; // x
 				vert.xyz.y = (float)CPs[ctrlPointIndex].mData[1]; // y
-				vert.xyz.z = -(float)CPs[ctrlPointIndex].mData[2]; // z
+				vert.xyz.z = (float)CPs[ctrlPointIndex].mData[2]; // z
 
 				int uVIndex = fbx_mesh->GetTextureUVIndex(polyIndex, vertIndex);
-				vert.uvw.x = (float)UVs->GetAt(uVIndex).mData[0]; // u
+				vert.uvw.x = 1 - (float)UVs->GetAt(uVIndex).mData[0]; // u
 				vert.uvw.y = 1 - (float)UVs->GetAt(uVIndex).mData[1]; // v
 				vert.uvw.z = 0; // w
 
@@ -631,19 +631,19 @@ namespace FBXLoader
 				//vert.normals.y = (float)normals.mData[1];
 				//vert.normals.z = -(float)normals.mData[2];
 
-				//if (biNormalElement != NULL)
-				//{
-				//	vert.bin.x = (float)binormals.mData[0];
-				//	vert.bin.y = (float)binormals.mData[1];
-				//	vert.bin.z = -(float)binormals.mData[2];
-				//}
-				//if (tangentElement != NULL)
-				//{
-				//	vert.tan.x = (float)tangents.mData[0];
-				//	vert.tan.y = (float)tangents.mData[1];
-				//	vert.tan.z = -(float)tangents.mData[2];
+				if (biNormalElement != NULL)
+				{
+					vert.bin.x = (float)binormals.mData[0];
+					vert.bin.y = (float)binormals.mData[1];
+					vert.bin.z = -(float)binormals.mData[2];
+				}
+				if (tangentElement != NULL)
+				{
+					vert.tan.x = (float)tangents.mData[0];
+					vert.tan.y = (float)tangents.mData[1];
+					vert.tan.z = -(float)tangents.mData[2];
 				//CalculateNormal(vert.tan, vert.bin, vert.normals); 
-				//}
+				}
 
 				//CalculateTangentBinormal()
 				//CalculateTangentBinormal(, vert, vert, &vert.tan, &vert.bin);
@@ -723,10 +723,17 @@ namespace FBXLoader
 
 				newBind.r[0].m128_f32[2] *= -1;
 				newBind.r[1].m128_f32[2] *= -1;
+				newBind.r[3].m128_f32[2] *= -1;
 				newBind.r[2].m128_f32[0] *= -1;
 				newBind.r[2].m128_f32[1] *= -1;
 				newBind.r[2].m128_f32[3] *= -1;
-				newBind.r[3].m128_f32[3] *= -1;
+
+				newInv.r[0].m128_f32[2] *= -1;
+				newInv.r[1].m128_f32[2] *= -1;
+				newInv.r[3].m128_f32[2] *= -1;
+				newInv.r[2].m128_f32[0] *= -1;
+				newInv.r[2].m128_f32[1] *= -1;
+				newInv.r[2].m128_f32[3] *= -1;
 
 				hierarchy[currJointIndex].SetLocal(newBind);
 				hierarchy[currJointIndex].SetInvBind(newInv);
@@ -904,12 +911,6 @@ namespace FBXLoader
 				FbxAMatrix geometryTransform = GetGeometryTransformation(fbx_joints[j]);
 				FbxAMatrix currentTransformOffset = fbx_joints[j]->EvaluateGlobalTransform(currTime) * geometryTransform;
 
-				currentTransformOffset.mData[0][2] *= -1;
-				currentTransformOffset.mData[1][2] *= -1;
-				currentTransformOffset.mData[2][0] *= -1;
-				currentTransformOffset.mData[2][1] *= -1;
-				currentTransformOffset.mData[2][3] *= -1;
-				currentTransformOffset.mData[3][2] *= -1;
 
 				//currentTransformOffset *= *geometryTransform;
 				//currAnim->SetGlobalTransform(currentTransformOffset.Inverse() * fbx_joints[j]->EvaluateGlobalTransform(currTime));
@@ -917,6 +918,12 @@ namespace FBXLoader
 				//currentTransformOffset = currentTransformOffset.Inverse();
 				//FbxAMatrix eval = fbx_joints[j]->EvaluateGlobalTransform(currTime);
 
+				currentTransformOffset.mData[0][2] *= -1;
+				currentTransformOffset.mData[1][2] *= -1;
+				currentTransformOffset.mData[2][0] *= -1;
+				currentTransformOffset.mData[2][1] *= -1;
+				currentTransformOffset.mData[2][3] *= -1;
+				currentTransformOffset.mData[3][2] *= -1;
 
 				XMMATRIX newTranOff;
 				for (int i = 0; i < 4; i++)
