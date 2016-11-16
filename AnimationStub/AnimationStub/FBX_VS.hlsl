@@ -30,7 +30,7 @@ cbuffer SCENE : register(b1)
 
 cbuffer BOFFSET : register(b2)
 {
-	float4x4 BoneOffset[4];
+	float4x4 BoneOffset[28];
 }
 
 V_OUT main(V_IN input)
@@ -63,6 +63,8 @@ V_OUT main(V_IN input)
 	tempVert += mul(BoneOffset[input.boneIn.y], float4(input.positionIn.x, input.positionIn.y, input.positionIn.z, 1)*input.weightIn.y);
 	tempVert += mul(BoneOffset[input.boneIn.z], float4(input.positionIn.x, input.positionIn.y, input.positionIn.z, 1)*input.weightIn.z);
 	tempVert += mul(BoneOffset[input.boneIn.w], float4(input.positionIn.x, input.positionIn.y, input.positionIn.z, 1)*input.weightIn.w);
+
+	//output.positionOut = tempVert;
 
 	return output;
 }

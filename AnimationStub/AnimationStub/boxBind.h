@@ -37,6 +37,7 @@ class MeshClass
 	std::vector<XMMATRIX> boneMatrices;
 	BoneSphere* newboneSphere;
 	KeyFrame* old = new KeyFrame();
+	KeyFrame keyFrame;
 	XMMATRIX boneScaleMatrix =
 	{
 		0.1f, 0, 0, 0,
@@ -73,7 +74,7 @@ protected:
 
 	struct BBUFFER
 	{
-		XMFLOAT4X4 boneOffsets[4];
+		XMFLOAT4X4 boneOffsets[28];
 	};
 
 	SEND_TO_OBJECT worldMatrix;

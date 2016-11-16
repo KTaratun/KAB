@@ -25,7 +25,7 @@ public:
 private:
 	// When in the animation does this KeyFrame happen?
 	FbxTime keyTime;
-	float keyFrameNum;
+	int keyFrameNum;
 	FbxAMatrix globalTransform;
 	KeyFrame* next;
 

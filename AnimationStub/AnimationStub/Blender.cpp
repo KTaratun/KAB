@@ -7,9 +7,9 @@ void Blender::SetBones(int numBones)
 	blendTime = 0;
 }
 
-XMMATRIX Blender::GetSkinningMatrix(int index)
+std::vector<XMMATRIX> Blender::GetSkinningMatrix()
 {
-	return boneOffsetArray[index];
+	return boneOffsetArray;
 }
 
 void Blender::SetAnim(Interpolator* ani)
@@ -22,14 +22,14 @@ void Blender::SetNextAnim(Interpolator* ani)
 	nextAnim = ani;
 }
 
-void Blender::Update(float delta, std::vector<Vertex> verts, std::vector<TransformNode> hierarchy)
+KeyFrame Blender::Update(float delta, std::vector<Vertex> verts, std::vector<TransformNode> hierarchy)
 {
 	KeyFrame keyFrame = currAnim->Process(delta);
 
 	// SWITCHING ANIMATION
 	if (GetAsyncKeyState(VK_TAB) && pressed != true && blendTime <= 0)
 	{
-		blendTime = .2;
+		blendTime = .2f;
 		pressed = true;
 	}
 	else if (!GetAsyncKeyState(VK_TAB))
@@ -59,8 +59,8 @@ void Blender::Update(float delta, std::vector<Vertex> verts, std::vector<Transfo
 		XMMATRIX bO = hierarchy[i].GetInvBind() * keyFrame.bones[i];
 		boneOffsetArray[i] = bO;
 	}
-
+	return keyFrame;
 	// UPDATING BONE DATA
 	//for (UINT i = 0; i < keyframe.bones.size(); i++)
-	//	XMStoreFloat4x4(&boneSpheres[i]->worldMatrix.objectMatrix, XMMatrixMultiply(boneScaleMatrix, keyframe.bones[i]));
+	//XMStoreFloat4x4(&boneSpheres[i]->worldMatrix.objectMatrix, XMMatrixMultiply(boneScaleMatrix, keyframe.bones[i]));
 }

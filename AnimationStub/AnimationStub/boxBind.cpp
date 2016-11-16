@@ -23,7 +23,7 @@ void MeshClass::Initialize(ID3D11Device* device)
 	rs_solidDescrip.SlopeScaledDepthBias = 0.0f;
 
 	D3D11_RASTERIZER_DESC rs_wireframeDescrip = rs_solidDescrip;
-	//rs_wireframeDescrip.FillMode = D3D11_FILL_WIREFRAME;
+	rs_wireframeDescrip.FillMode = D3D11_FILL_WIREFRAME;
 
 	device->CreateRasterizerState(&rs_solidDescrip, &p_rsSolid);
 	device->CreateRasterizerState(&rs_wireframeDescrip, &p_rsWireframe);
@@ -37,8 +37,8 @@ void MeshClass::Initialize(ID3D11Device* device)
 	std::vector<Mesh> m;
 	string a;
 
-	FBXLoader::Load("Box_Idle.fbx", meshes, transformHierarchy, animations, a); // all bones from both .fbxs are being concatenated
-	FBXLoader::Load("Box_Jump.fbx", m, tn, animations, a); // tn is literally doing nothing
+	FBXLoader::Load("Battle Mage with Rig and textures.fbx", meshes, transformHierarchy, animations, a); // all bones from both .fbxs are being concatenated
+	FBXLoader::Load("Death.fbx", m, tn, animations, a); // tn is literally doing nothing
 	
 	for (UINT i = 0; i < transformHierarchy.size(); i++)
 	{
@@ -112,7 +112,7 @@ void MeshClass::Initialize(ID3D11Device* device)
 
 	device->CreateBuffer(&boneBufferDesc, NULL, &boneBuffer);
 
-	CreateDDSTextureFromFile(device, L"TestCube.dds", nullptr, &shaderResourceView);
+	CreateDDSTextureFromFile(device, L"PPG_3D_Player_D.dds", nullptr, &shaderResourceView);
 	//const wchar_t* tex = (const wchar_t*)texture_name.c_str();
 	//CreateWICTextureFromFile(device, tex, nullptr, &shaderResourceView);
 
@@ -147,10 +147,15 @@ void MeshClass::Initialize(ID3D11Device* device)
 
 	XMStoreFloat4x4(&worldMatrix.objectMatrix, objMat);
 
-	for (UINT i = 0; i < 4; i++)
+	for (UINT i = 0; i < blender.GetSkinningMatrix().size(); i++)
 	{
-		boneOffset.boneOffsets[i] = IdentityMatrix;
+		XMStoreFloat4x4(&boneOffset.boneOffsets[i], blender.GetSkinningMatrix()[i]);
 	}
+
+	//for (UINT i = 0; i < 4; i++)
+	//{
+	//	boneOffset.boneOffsets[i] = IdentityMatrix;
+	//}
 	
 	for (UINT i = 0; i < boneMatrices.size(); i++)
 	{
@@ -196,25 +201,28 @@ void MeshClass::Render(ID3D11DeviceContext* deviceContext, ID3D11DepthStencilVie
 	deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	deviceContext->IASetIndexBuffer(indexBuffer, DXGI_FORMAT_R32_UINT, 0);
 
-	deviceContext->RSSetState(p_rsWireframe);
+	//deviceContext->RSSetState(p_rsWireframe);
 	deviceContext->Draw((UINT)meshes[0].verts.size(), 0);
 	deviceContext->RSSetState(p_rsSolid);
 
 	blender.Update(delta, meshes[0].verts, transformHierarchy);
 	std::vector<Vertex> vertOut = meshes[0].verts;
 
+	// RENDER BONES
+	for (unsigned int i = 0; i < boneSpheres.size(); i++)
+		boneSpheres[i]->Render(deviceContext, delta);
+
 	// ROUGHLY MATH FOR SMOOTH SKINNING
 	for (size_t i = 0; i < vertOut.size(); i++)
 	{
 		XMVECTOR vertPos = XMVectorSet(meshes[0].verts[i].xyz.x, meshes[0].verts[i].xyz.y, meshes[0].verts[i].xyz.z, 1.f);// = XMLoadFloat3(&meshes[0].verts[i].xyz);
 		XMVECTOR tempVert;
-		tempVert = XMVector4Transform(vertPos, blender.GetSkinningMatrix(vertOut[i].bone.x) * meshes[0].verts[i].weights.x);
-		tempVert += XMVector4Transform(vertPos, blender.GetSkinningMatrix(vertOut[i].bone.y) * meshes[0].verts[i].weights.y);
-		tempVert += XMVector4Transform(vertPos, blender.GetSkinningMatrix(vertOut[i].bone.z) * meshes[0].verts[i].weights.z);
-		tempVert += XMVector4Transform(vertPos, blender.GetSkinningMatrix(vertOut[i].bone.w) * meshes[0].verts[i].weights.w);
+		tempVert = XMVector4Transform(vertPos, blender.GetSkinningMatrix()[vertOut[i].bone.x] * meshes[0].verts[i].weights.x);
+		tempVert += XMVector4Transform(vertPos, blender.GetSkinningMatrix()[vertOut[i].bone.y] * meshes[0].verts[i].weights.y);
+		tempVert += XMVector4Transform(vertPos, blender.GetSkinningMatrix()[vertOut[i].bone.z] * meshes[0].verts[i].weights.z);
+		tempVert += XMVector4Transform(vertPos, blender.GetSkinningMatrix()[vertOut[i].bone.w] * meshes[0].verts[i].weights.w);
 		
 		XMStoreFloat3(&vertOut[i].xyz, tempVert);
-
 	}
 
 	// RESETTING VERTEX BUFFER
@@ -234,9 +242,7 @@ void MeshClass::Render(ID3D11DeviceContext* deviceContext, ID3D11DepthStencilVie
 	//RELEASE_COM(vertexBuffer);
 
 
-	// RENDER BONES
-	for (unsigned int i = 0; i < boneSpheres.size(); i++)
-		boneSpheres[i]->Render(deviceContext, delta);
+
 }
 
 void MeshClass::Shutdown()
