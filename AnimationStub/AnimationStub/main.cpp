@@ -302,6 +302,9 @@ APP::APP(HINSTANCE hinst, WNDPROC proc)
 
 bool APP::Run()
 {
+	//_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+	//_CrtSetBreakAlloc(372);
+
 	xTime.Signal();
 
 	//scene_matrix.m4x4_view = OrthoAffineInverse(cameraMatrix);

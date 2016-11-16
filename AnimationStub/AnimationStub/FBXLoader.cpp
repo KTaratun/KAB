@@ -590,7 +590,7 @@ namespace FBXLoader
 				vert.xyz.z = (float)CPs[ctrlPointIndex].mData[2]; // z
 
 				int uVIndex = fbx_mesh->GetTextureUVIndex(polyIndex, vertIndex);
-				vert.uvw.x = (float)UVs->GetAt(uVIndex).mData[0]; // u
+				vert.uvw.x = 1 - (float)UVs->GetAt(uVIndex).mData[0]; // u
 				vert.uvw.y = 1 - (float)UVs->GetAt(uVIndex).mData[1]; // v
 				vert.uvw.z = 0; // w
 
@@ -651,13 +651,13 @@ namespace FBXLoader
 				//control_point_indices.push_back(ctrlPointIndex);
 				//mesh.verts.push_back(vert);
 	
-				//if (vertIndex == 0)
-				//	mesh.verts[(polyIndex * 3) + 1] = vert;
-				//else if (vertIndex == 1)
-				//	mesh.verts[(polyIndex * 3) + 0] = vert;
-				//else
-				//	mesh.verts[(polyIndex * 3) + 2] = vert;
-				mesh.verts[(polyIndex * 3) + vertIndex] = vert;
+				if (vertIndex == 0)
+					mesh.verts[(polyIndex * 3) + 1] = vert;
+				else if (vertIndex == 1)
+					mesh.verts[(polyIndex * 3) + 0] = vert;
+				else
+					mesh.verts[(polyIndex * 3) + 2] = vert;
+				//mesh.verts[(polyIndex * 3) + vertIndex] = vert;
 
 				vertexCounter++;
 			}
@@ -723,10 +723,17 @@ namespace FBXLoader
 
 				newBind.r[0].m128_f32[2] *= -1;
 				newBind.r[1].m128_f32[2] *= -1;
+				newBind.r[3].m128_f32[2] *= -1;
 				newBind.r[2].m128_f32[0] *= -1;
 				newBind.r[2].m128_f32[1] *= -1;
 				newBind.r[2].m128_f32[3] *= -1;
-				newBind.r[3].m128_f32[3] *= -1;
+
+				newInv.r[0].m128_f32[2] *= -1;
+				newInv.r[1].m128_f32[2] *= -1;
+				newInv.r[3].m128_f32[2] *= -1;
+				newInv.r[2].m128_f32[0] *= -1;
+				newInv.r[2].m128_f32[1] *= -1;
+				newInv.r[2].m128_f32[3] *= -1;
 
 				hierarchy[currJointIndex].SetLocal(newBind);
 				hierarchy[currJointIndex].SetInvBind(newInv);
@@ -904,12 +911,6 @@ namespace FBXLoader
 				FbxAMatrix geometryTransform = GetGeometryTransformation(fbx_joints[j]);
 				FbxAMatrix currentTransformOffset = fbx_joints[j]->EvaluateGlobalTransform(currTime) * geometryTransform;
 
-				//currentTransformOffset.mData[0][2] *= -1;
-				//currentTransformOffset.mData[1][2] *= -1;
-				//currentTransformOffset.mData[2][0] *= -1;
-				//currentTransformOffset.mData[2][1] *= -1;
-				//currentTransformOffset.mData[2][3] *= -1;
-				//currentTransformOffset.mData[3][2] *= -1;
 
 				//currentTransformOffset *= *geometryTransform;
 				//currAnim->SetGlobalTransform(currentTransformOffset.Inverse() * fbx_joints[j]->EvaluateGlobalTransform(currTime));
@@ -917,6 +918,12 @@ namespace FBXLoader
 				//currentTransformOffset = currentTransformOffset.Inverse();
 				//FbxAMatrix eval = fbx_joints[j]->EvaluateGlobalTransform(currTime);
 
+				currentTransformOffset.mData[0][2] *= -1;
+				currentTransformOffset.mData[1][2] *= -1;
+				currentTransformOffset.mData[2][0] *= -1;
+				currentTransformOffset.mData[2][1] *= -1;
+				currentTransformOffset.mData[2][3] *= -1;
+				currentTransformOffset.mData[3][2] *= -1;
 
 				XMMATRIX newTranOff;
 				for (int i = 0; i < 4; i++)

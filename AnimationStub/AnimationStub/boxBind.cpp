@@ -23,7 +23,7 @@ void MeshClass::Initialize(ID3D11Device* device)
 	rs_solidDescrip.SlopeScaledDepthBias = 0.0f;
 
 	D3D11_RASTERIZER_DESC rs_wireframeDescrip = rs_solidDescrip;
-	//rs_wireframeDescrip.FillMode = D3D11_FILL_WIREFRAME;
+	rs_wireframeDescrip.FillMode = D3D11_FILL_WIREFRAME;
 
 	device->CreateRasterizerState(&rs_solidDescrip, &p_rsSolid);
 	device->CreateRasterizerState(&rs_wireframeDescrip, &p_rsWireframe);
@@ -37,8 +37,11 @@ void MeshClass::Initialize(ID3D11Device* device)
 	std::vector<Mesh> m;
 	string a;
 
-	FBXLoader::Load("Battle Mage with Rig and textures.fbx", meshes, transformHierarchy, animations, a); // all bones from both .fbxs are being concatenated
-	FBXLoader::Load("Death.fbx", m, tn, animations, a); // tn is literally doing nothing
+	FBXLoader::Load("Box_Idle.fbx", meshes, transformHierarchy, animations, a); // all bones from both .fbxs are being concatenated
+	FBXLoader::Load("Box_Jump.fbx", m, tn, animations, a); // tn is literally doing nothing
+
+	//FBXLoader::Load("Battle Mage with Rig and textures.fbx", meshes, transformHierarchy, animations, a); // all bones from both .fbxs are being concatenated
+	//FBXLoader::Load("Death.fbx", m, tn, animations, a); // tn is literally doing nothing
 	
 	for (UINT i = 0; i < transformHierarchy.size(); i++)
 	{
@@ -101,7 +104,8 @@ void MeshClass::Initialize(ID3D11Device* device)
 
 	device->CreateBuffer(&objectConstantBufferDesc, NULL, &constantBuffer);
 
-	CreateDDSTextureFromFile(device, L"PPG_3D_Player_N.dds", nullptr, &shaderResourceView);
+	CreateDDSTextureFromFile(device, L"TestCube.dds", nullptr, &shaderResourceView);
+	//CreateDDSTextureFromFile(device, L"PPG_3D_Player_D.dds", nullptr, &shaderResourceView);
 	//const wchar_t* tex = (const wchar_t*)texture_name.c_str();
 	//CreateWICTextureFromFile(device, tex, nullptr, &shaderResourceView);
 
@@ -203,7 +207,7 @@ void MeshClass::Render(ID3D11DeviceContext* deviceContext, ID3D11DepthStencilVie
 	deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	deviceContext->IASetIndexBuffer(indexBuffer, DXGI_FORMAT_R32_UINT, 0);
 
-	deviceContext->RSSetState(p_rsWireframe);
+	//deviceContext->RSSetState(p_rsWireframe);
 	deviceContext->Draw((UINT)meshes[0].verts.size(), 0);
 	deviceContext->RSSetState(p_rsSolid);
 	for (UINT i = 0; i < keyFrame.bones.size(); i++)
