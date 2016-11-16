@@ -587,10 +587,10 @@ namespace FBXLoader
 				
 				vert.xyz.x = (float)CPs[ctrlPointIndex].mData[0]; // x
 				vert.xyz.y = (float)CPs[ctrlPointIndex].mData[1]; // y
-				vert.xyz.z = (float)CPs[ctrlPointIndex].mData[2]; // z
+				vert.xyz.z = -(float)CPs[ctrlPointIndex].mData[2]; // z
 
 				int uVIndex = fbx_mesh->GetTextureUVIndex(polyIndex, vertIndex);
-				vert.uvw.x = 1 - (float)UVs->GetAt(uVIndex).mData[0]; // u
+				vert.uvw.x = (float)UVs->GetAt(uVIndex).mData[0]; // u
 				vert.uvw.y = 1 - (float)UVs->GetAt(uVIndex).mData[1]; // v
 				vert.uvw.z = 0; // w
 
@@ -602,12 +602,14 @@ namespace FBXLoader
 					binormIndex = biNormalElement->GetIndexArray().GetAt(vertIndex);
 				if (tangentElement != NULL)
 					tangentIndex = tangentElement->GetIndexArray().GetAt(vertIndex);
+
 				//	normIndex = vertIndex;
 				//else if (normalElement->GetReferenceMode() == FbxGeometryElement::eIndexToDirect)
 				FbxVector4 normals;
 				FbxVector4 binormals;
 				FbxVector4 tangents;
 				normals = normalElement->GetDirectArray().GetAt(normIndex);
+
 				if (biNormalElement != NULL)
 					binormals = biNormalElement->GetDirectArray().GetAt(binormIndex);
 				if (tangentElement != NULL)
@@ -626,7 +628,10 @@ namespace FBXLoader
 				vert.bone.z = cps[ctrlPointIndex]->blendingInfo[2].blendingIndex;
 				vert.bone.w = cps[ctrlPointIndex]->blendingInfo[3].blendingIndex;
 
-				vert.normals = normal;
+				//vert.normals = normal;
+				vert.normals.x = normal.x;
+				vert.normals.y = normal.y;
+				vert.normals.z = -normal.z;
 				//vert.normals.x = (float)normals.mData[0];
 				//vert.normals.y = (float)normals.mData[1];
 				//vert.normals.z = -(float)normals.mData[2];

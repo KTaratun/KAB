@@ -105,7 +105,7 @@ void MeshClass::Initialize(ID3D11Device* device)
 	device->CreateBuffer(&objectConstantBufferDesc, NULL, &constantBuffer);
 
 	CreateDDSTextureFromFile(device, L"TestCube.dds", nullptr, &shaderResourceView);
-	//CreateDDSTextureFromFile(device, L"PPG_3D_Player_D.dds", nullptr, &shaderResourceView);
+	//CreateDDSTextureFromFile(device, L"PPG_3D_Player_N.dds", nullptr, &shaderResourceView);
 	//const wchar_t* tex = (const wchar_t*)texture_name.c_str();
 	//CreateWICTextureFromFile(device, tex, nullptr, &shaderResourceView);
 
@@ -163,37 +163,73 @@ void MeshClass::Render(ID3D11DeviceContext* deviceContext, ID3D11DepthStencilVie
 	std::vector<Vertex> vertOut = meshes[0].verts;
 
 	// ROUGHLY MATH FOR SMOOTH ShINNING
-	for (size_t i = 0; i < vertOut.size(); i++)
-	{
-		XMVECTOR vertPos = XMVectorSet(meshes[0].verts[i].xyz.x, meshes[0].verts[i].xyz.y, meshes[0].verts[i].xyz.z, 1.f);// = XMLoadFloat3(&meshes[0].verts[i].xyz);
-		XMVECTOR tempVert;
-		tempVert = XMVector4Transform(vertPos, blender.GetSkinningMatrix(vertOut[i].bone.x) * meshes[0].verts[i].weights.x);
-		tempVert += XMVector4Transform(vertPos, blender.GetSkinningMatrix(vertOut[i].bone.y) * meshes[0].verts[i].weights.y);
-		tempVert += XMVector4Transform(vertPos, blender.GetSkinningMatrix(vertOut[i].bone.z) * meshes[0].verts[i].weights.z);
-		tempVert += XMVector4Transform(vertPos, blender.GetSkinningMatrix(vertOut[i].bone.w) * meshes[0].verts[i].weights.w);
-
-		XMStoreFloat3(&vertOut[i].xyz, tempVert);
-	}
+	//for (size_t i = 0; i < vertOut.size(); i++)
+	//{
+	//	XMVECTOR vertPos = XMVectorSet(meshes[0].verts[i].xyz.x, meshes[0].verts[i].xyz.y, meshes[0].verts[i].xyz.z, 1.f);// = XMLoadFloat3(&meshes[0].verts[i].xyz);
+	//	
+	//	XMVECTOR tempVert;
+	//	tempVert = XMVector4Transform(vertPos, blender.GetSkinningMatrix(vertOut[i].bone.x) * meshes[0].verts[i].weights.x);
+	//	tempVert += XMVector4Transform(vertPos, blender.GetSkinningMatrix(vertOut[i].bone.y) * meshes[0].verts[i].weights.y);
+	//	tempVert += XMVector4Transform(vertPos, blender.GetSkinningMatrix(vertOut[i].bone.z) * meshes[0].verts[i].weights.z);
+	//	tempVert += XMVector4Transform(vertPos, blender.GetSkinningMatrix(vertOut[i].bone.w) * meshes[0].verts[i].weights.w);
+	//
+	//
+	//	XMVECTOR norms = XMVectorSet(meshes[0].verts[i].normals.x, meshes[0].verts[i].normals.y, meshes[0].verts[i].normals.z, 0);
+	//	XMVECTOR tempNorm;
+	//	
+	//	tempNorm = XMVector4Transform(norms, blender.GetSkinningMatrix(vertOut[i].bone.x));
+	//	tempNorm += XMVector4Transform(norms, blender.GetSkinningMatrix(vertOut[i].bone.y));
+	//	tempNorm += XMVector4Transform(norms, blender.GetSkinningMatrix(vertOut[i].bone.z));
+	//	tempNorm += XMVector4Transform(norms, blender.GetSkinningMatrix(vertOut[i].bone.w));
+	//	
+	//	XMVector4Normalize(tempNorm);
+	//
+	//	XMVECTOR tans = XMVectorSet(meshes[0].verts[i].tan.x, meshes[0].verts[i].tan.y, meshes[0].verts[i].tan.z, 0);
+	//	XMVECTOR tempTan;
+	//
+	//	tempTan = XMVector4Transform(tans, blender.GetSkinningMatrix(vertOut[i].bone.x));
+	//	tempTan += XMVector4Transform(tans, blender.GetSkinningMatrix(vertOut[i].bone.y));
+	//	tempTan += XMVector4Transform(tans, blender.GetSkinningMatrix(vertOut[i].bone.z));
+	//	tempTan += XMVector4Transform(tans, blender.GetSkinningMatrix(vertOut[i].bone.w));
+	//
+	//	XMVector4Normalize(tempTan);
+	//
+	//	XMVECTOR bis = XMVectorSet(meshes[0].verts[i].bin.x, meshes[0].verts[i].bin.y, meshes[0].verts[i].bin.z, 0);
+	//	XMVECTOR tempBis;
+	//
+	//	tempBis = XMVector4Transform(bis, blender.GetSkinningMatrix(vertOut[i].bone.x));
+	//	tempBis += XMVector4Transform(bis, blender.GetSkinningMatrix(vertOut[i].bone.y));
+	//	tempBis += XMVector4Transform(bis, blender.GetSkinningMatrix(vertOut[i].bone.z));
+	//	tempBis += XMVector4Transform(bis, blender.GetSkinningMatrix(vertOut[i].bone.w));
+	//
+	//	XMVector4Normalize(tempBis);
+	//
+	//
+	//	XMStoreFloat3(&vertOut[i].xyz, tempVert);
+	//	XMStoreFloat3(&vertOut[i].normals, tempNorm);
+	//	XMStoreFloat3(&vertOut[i].tan, tempTan);
+	//	XMStoreFloat3(&vertOut[i].bin, tempBis);
+	//}
 
 	// RESETTING VERTEX BUFFER
-	D3D11_BUFFER_DESC vertexBufferDesc;
-	ZeroMemory(&vertexBufferDesc, sizeof(vertexBufferDesc));
-	vertexBufferDesc.Usage = D3D11_USAGE_IMMUTABLE;
-	vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-	vertexBufferDesc.CPUAccessFlags = NULL;
-	vertexBufferDesc.ByteWidth = sizeof(Vertex) * (UINT)meshes[0].verts.size();
-	vertexBufferDesc.MiscFlags = 0;
-
-	D3D11_SUBRESOURCE_DATA initialDataVertex;
-	initialDataVertex.pSysMem = vertOut.data();
-
-	HRESULT hr;
-	hr = device->CreateBuffer(&vertexBufferDesc, &initialDataVertex, &vertexBuffer);
-
+	//D3D11_BUFFER_DESC vertexBufferDesc;
+	//ZeroMemory(&vertexBufferDesc, sizeof(vertexBufferDesc));
+	//vertexBufferDesc.Usage = D3D11_USAGE_IMMUTABLE;
+	//vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	//vertexBufferDesc.CPUAccessFlags = NULL;
+	//vertexBufferDesc.ByteWidth = sizeof(Vertex) * (UINT)meshes[0].verts.size();
+	//vertexBufferDesc.MiscFlags = 0;
+	//
+	//D3D11_SUBRESOURCE_DATA initialDataVertex;
+	//initialDataVertex.pSysMem = vertOut.data();
+	//
+	//HRESULT hr;
+	//hr = device->CreateBuffer(&vertexBufferDesc, &initialDataVertex, &vertexBuffer);
+	
 	UINT stride = sizeof(Vertex);
 	UINT offset = 0;
 	deviceContext->IASetVertexBuffers(0, 1, &vertexBuffer, &stride, &offset);
-
+	
 	deviceContext->PSSetShaderResources(0, 1, &shaderResourceView);
 	deviceContext->PSSetSamplers(0, 1, &samplerState);
 	deviceContext->PSSetSamplers(1, 1, &samplerState);
@@ -370,3 +406,4 @@ void BoneSphere::Shutdown()
 	RELEASE_COM(shaderResourceView);
 	RELEASE_COM(samplerState);
 }
+
