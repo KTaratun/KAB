@@ -29,7 +29,7 @@ KeyFrame Blender::Update(float delta, std::vector<Vertex> verts, std::vector<Tra
 	// SWITCHING ANIMATION
 	if (GetAsyncKeyState(VK_TAB) && pressed != true && blendTime <= 0)
 	{
-		blendTime = .3;
+		blendTime = .3f;
 		pressed = true;
 	}
 	else if (!GetAsyncKeyState(VK_TAB))

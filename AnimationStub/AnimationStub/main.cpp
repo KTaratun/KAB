@@ -153,7 +153,7 @@ APP::APP(HINSTANCE hinst, WNDPROC proc)
 
 	light_data.diffuse_spotLight = { 1,1,1,1 };
 
-	light_data.ratio_spotLight = 0.93f;
+	light_data.ratio_spotLight = 0.98f;
 
 	//Swapchain Descriptor
 	DXGI_SWAP_CHAIN_DESC sc_Descrip;
