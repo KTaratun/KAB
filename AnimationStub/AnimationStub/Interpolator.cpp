@@ -11,6 +11,7 @@ Interpolator::Interpolator() : animPtr(nullptr)
 {
 	currentFrame = NULL;
 	currentTime = 0;
+	transition = 0;
 	//SWITCH = false;
 }
 
@@ -24,48 +25,44 @@ KeyFrame Interpolator::Process(float time) // time should be added
 	// You set the animation pointer, right?
 	//assert(animPtr);
 
-	//return *animPtr->keyFrames[0];
-
 	if (currentFrame == NULL)
-		currentFrame = animPtr->keyFrames[0];
-	
-	//
-	//currentFrame = currentFrame->GetNext();
-	//return *currentFrame;
+		currentFrame = animPtr->keyFrames[1];
 
 	// Get new time 
 	AddTime(time);
-	float finalTime = animPtr->keyFrames[animPtr->keyFrames.size() - 1]->GetKeyTime().GetSecondDouble();
-	if (currentTime > finalTime)
-	{
-		currentTime = 0;
-		currentFrame = animPtr->keyFrames[0];
-	}
+	float other = (float)animPtr->keyFrames[animPtr->keyFrames.size() - 2]->GetKeyTime().GetSecondDouble();
+	float finalTime = (float)animPtr->keyFrames[animPtr->keyFrames.size() - 1]->GetKeyTime().GetSecondDouble();
+	float dif = finalTime - other;
+	finalTime = dif;
+	finalTime += (float)animPtr->keyFrames[animPtr->keyFrames.size() - 1]->GetKeyTime().GetSecondDouble();
 
 	float cFrameTime = (float)currentFrame->GetKeyTime().GetSecondDouble();
 	float nFrameTime = (float)currentFrame->GetNext()->GetKeyTime().GetSecondDouble();
 
+	if (currentTime > finalTime)
+	{
+		currentFrame = animPtr->keyFrames[1];
+		currentTime = (float)currentFrame->GetKeyTime().GetSecondDouble();
+		cFrameTime = (float)currentFrame->GetKeyTime().GetSecondDouble();
+		nFrameTime = (float)currentFrame->GetNext()->GetKeyTime().GetSecondDouble();
+	}
+	
 	while (currentTime > nFrameTime)
 	{
 		currentFrame = currentFrame->GetNext();
 		cFrameTime = nFrameTime;
-		nFrameTime = (float)currentFrame->GetNext()->GetKeyTime().GetSecondDouble();
-		//SWITCH = false;
+
+		if (currentFrame->GetKeyFrameNum() == animPtr->keyFrames[animPtr->keyFrames.size() - 1]->GetKeyFrameNum())
+			nFrameTime = finalTime;
+		else
+			nFrameTime = (float)currentFrame->GetNext()->GetKeyTime().GetSecondDouble();
 	}
+	
 	float frameTime = nFrameTime - cFrameTime;
 	float tweenTime = nFrameTime - currentTime;
-
 	float delta = 1 - (tweenTime / frameTime);
-	//float timeDelta = frameTime / tweenTime;
 
 	return Interpolate(currentFrame, currentFrame->GetNext(), delta);
-
-	// Make sure currentTime is valid, assuming we want to loop animations
-	//float animDuration = animPtr->GetDuration();
-	//while(currentTime > animDuration)
-	//	currentTime -= animDuration;
-
-	// TODO: Interpolate you keyframe or channel data here
 }
 
 KeyFrame Interpolator::Interpolate(KeyFrame* current, KeyFrame* next, float delta)
@@ -94,21 +91,5 @@ KeyFrame Interpolator::Interpolate(KeyFrame* current, KeyFrame* next, float delt
 
 	//float newKeyTime = (next->GetKeyTime().GetSecondDouble() * delta) + (current->GetKeyTime().GetSecondDouble() * (1 - delta));
 	//newKeyFrame.SetKeyTime(newKeyTime);
-	return newKeyFrame;
-}
-
-KeyFrame Interpolator::SwitchAnimation(Animation *ani2)
-{
-	//for (float i = 0; i < 1; i += 0.01)
-	//{
-	//	KeyFrame newCurr = Interpolate(currentFrame, currentFrame->GetNext(), i);
-	//	KeyFrame next = Interpolate(ani2->keyFrames[0], ani2->keyFrames[1], i);
-	//	KeyFrame newKeyFrame = Interpolate(currentFrame, currentFrame->GetNext(), i);;
-	//}
-	//
-	//currentFrame = ani2->keyFrames[0];
-	//SetAnimPtr(ani2);
-	//
-	KeyFrame newKeyFrame;
 	return newKeyFrame;
 }

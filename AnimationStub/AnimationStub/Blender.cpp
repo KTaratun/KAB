@@ -25,12 +25,12 @@ void Blender::SetNextAnim(Interpolator* ani)
 KeyFrame Blender::Update(float delta, std::vector<Vertex> verts, std::vector<TransformNode> hierarchy)
 {
 	//return *currAnim->GetAnimPtr()->keyFrames[2]
-	KeyFrame keyFrame = currAnim->Process(delta);
+	KeyFrame keyFrame = currAnim->Process(delta*.3);
 
 	// SWITCHING ANIMATION
 	if (GetAsyncKeyState(VK_TAB) && pressed != true && blendTime <= 0)
 	{
-		blendTime = .3;
+		blendTime = .3f;
 		pressed = true;
 	}
 	else if (!GetAsyncKeyState(VK_TAB))

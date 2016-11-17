@@ -577,13 +577,12 @@ namespace FBXLoader
 		for (int polyIndex = 0; polyIndex < polyCount; polyIndex++)
 		{
 			int vertCount = fbx_mesh->GetPolygonSize(polyIndex);
+			XMFLOAT3 normal[3];
 
 			for (int vertIndex = 0; vertIndex < vertCount; vertIndex++)
 			{
-				XMFLOAT3 normal;
-
 				int ctrlPointIndex = fbx_mesh->GetPolygonVertex(polyIndex, vertIndex);
-				ReadNormal(fbx_mesh, ctrlPointIndex, vertexCounter, normal);
+				ReadNormal(fbx_mesh, ctrlPointIndex, vertexCounter, normal[vertIndex]);
 				
 				vert.xyz.x = (float)CPs[ctrlPointIndex].mData[0]; // x
 				vert.xyz.y = (float)CPs[ctrlPointIndex].mData[1]; // y
@@ -629,12 +628,15 @@ namespace FBXLoader
 				vert.bone.w = cps[ctrlPointIndex]->blendingInfo[3].blendingIndex;
 
 				//vert.normals = normal;
-				vert.normals.x = normal.x;
-				vert.normals.y = normal.y;
-				vert.normals.z = -normal.z;
+				vert.normals.x = normal[vertIndex].x;
+				vert.normals.y = normal[vertIndex].y;
+				vert.normals.z = -normal[vertIndex].z;
 				//vert.normals.x = (float)normals.mData[0];
 				//vert.normals.y = (float)normals.mData[1];
 				//vert.normals.z = -(float)normals.mData[2];
+
+				if (vert.normals.x == .736)
+					break;
 
 				if (biNormalElement != NULL)
 				{
@@ -647,7 +649,7 @@ namespace FBXLoader
 					vert.tan.x = (float)tangents.mData[0];
 					vert.tan.y = (float)tangents.mData[1];
 					vert.tan.z = -(float)tangents.mData[2];
-				//CalculateNormal(vert.tan, vert.bin, vert.normals); 
+					//CalculateNormal(vert.tan, vert.bin, vert.normals); 
 				}
 
 				//CalculateTangentBinormal()
@@ -902,8 +904,9 @@ namespace FBXLoader
 		FbxLongLong endFrame = end.GetFrameCount(FbxTime::eFrames24); //for debugging
 		animation.SetDuration((float)(end.GetFrameCount(FbxTime::eFrames24) - start.GetFrameCount(FbxTime::eFrames24) + 1));
 		KeyFrame* old;
+		int totalFrames = 0;
 
-		for (FbxLongLong i = startFrame; i <= endFrame; ++i) //forced i to be 0 instead of k since it was giving a different value
+		for (FbxLongLong i = 1; i <= endFrame; ++i) //forced i to be 1 instead of start frame because the bind pose was messing with the mage's animations
 		{
 			//KeyFrame* currAnim = animation.keyFrames[i];
 			KeyFrame* currAnim = new KeyFrame();
@@ -944,16 +947,16 @@ namespace FBXLoader
 				currAnim->bones.push_back(newTranOff); // * newEval
 			}
 			animation.keyFrames.push_back(currAnim);
-			animation.keyFrames[i]->SetKeyTime(currTime);
-			animation.keyFrames[i]->SetKeyFrameNum((int)i);
-			if (i != 0)
+			animation.keyFrames[totalFrames]->SetKeyTime(currTime);
+			animation.keyFrames[totalFrames]->SetKeyFrameNum((int)totalFrames);
+			if (i != 1)
 				old->SetNext(currAnim);
 
 			old = currAnim;
 			//currAnim = (currAnim->GetNext());
+			totalFrames++;
 		}
-
-		animation.keyFrames[animation.keyFrames.size() - 1]->SetNext(animation.keyFrames[0]);
+		animation.keyFrames[animation.keyFrames.size() - 1]->SetNext(animation.keyFrames[1]);
 
 		return true;
 		return false;
