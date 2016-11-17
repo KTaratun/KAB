@@ -149,11 +149,11 @@ APP::APP(HINSTANCE hinst, WNDPROC proc)
 	m4x4_camTranslate = m4x4_Identity;
 
 	//Lights
-	light_data.diffuse_ambientLight = { 0.6f,0.6f,0.6f,1 };
+	light_data.diffuse_ambientLight = { 1.0f,1.0f,1.0f,1 };
 
 	light_data.diffuse_spotLight = { 1,1,1,1 };
 
-	light_data.ratio_spotLight = 0.93f;
+	light_data.ratio_spotLight = 0.98f;
 
 	//Swapchain Descriptor
 	DXGI_SWAP_CHAIN_DESC sc_Descrip;

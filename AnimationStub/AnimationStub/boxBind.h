@@ -59,6 +59,8 @@ protected:
 
 	ID3D11Texture2D* texture;
 	ID3D11ShaderResourceView* shaderResourceView;
+	ID3D11ShaderResourceView* normalResourceView;
+	ID3D11ShaderResourceView* specResourceView;
 	ID3D11SamplerState* samplerState;
 
 	ID3D11RasterizerState* p_rsSolid;

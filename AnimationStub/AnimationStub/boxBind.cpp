@@ -4,9 +4,6 @@
 #include "FBX_PS.csh"
 #include "Bone_VS.csh"
 #include "Bone_PS.csh"
-#define DIFFUSE 1
-#define SPECULAR 0
-#define NORMAL 0
 
 void MeshClass::Initialize(ID3D11Device* device)
 {
@@ -40,8 +37,8 @@ void MeshClass::Initialize(ID3D11Device* device)
 	//FBXLoader::Load("Box_Idle.fbx", meshes, transformHierarchy, animations, a); // all bones from both .fbxs are being concatenated
 	//FBXLoader::Load("Box_Jump.fbx", m, tn, animations, a); // tn is literally doing nothing
 
-	FBXLoader::Load("Battle Mage with Rig and textures.fbx", meshes, transformHierarchy, animations, a); // all bones from both .fbxs are being concatenated
-	FBXLoader::Load("Death.fbx", m, tn, animations, a); // tn is literally doing nothing
+	FBXLoader::Load("Idle.fbx", meshes, transformHierarchy, animations, a); // all bones from both .fbxs are being concatenated
+	FBXLoader::Load("Walk.fbx", m, tn, animations, a); // tn is literally doing nothing
 
 	for (UINT i = 0; i < transformHierarchy.size(); i++)
 	{
@@ -117,7 +114,11 @@ void MeshClass::Initialize(ID3D11Device* device)
 
 
 	//CreateDDSTextureFromFile(device, L"TestCube.dds", nullptr, &shaderResourceView);
-	CreateDDSTextureFromFile(device, L"PPG_3D_Player_Spec.dds", nullptr, &shaderResourceView);
+	CreateDDSTextureFromFile(device, L"PPG_3D_Player_D.dds", nullptr, &shaderResourceView);
+	CreateDDSTextureFromFile(device, L"PPG_3D_Player_N.dds", nullptr, &normalResourceView);
+	CreateDDSTextureFromFile(device, L"PPG_3D_Player_Spec.dds", nullptr, &specResourceView);
+
+
 	//const wchar_t* tex = (const wchar_t*)texture_name.c_str();
 	//CreateWICTextureFromFile(device, tex, nullptr, &shaderResourceView);
 
@@ -254,6 +255,10 @@ void MeshClass::Render(ID3D11DeviceContext* deviceContext, ID3D11DepthStencilVie
 	deviceContext->IASetVertexBuffers(0, 1, &vertexBuffer, &stride, &offset);
 
 	deviceContext->PSSetShaderResources(0, 1, &shaderResourceView);
+	deviceContext->PSSetShaderResources(1, 1, &normalResourceView);
+	deviceContext->PSSetShaderResources(2, 1, &specResourceView);
+
+
 	deviceContext->PSSetSamplers(0, 1, &samplerState);
 	deviceContext->PSSetSamplers(1, 1, &samplerState);
 
@@ -279,11 +284,6 @@ void MeshClass::Render(ID3D11DeviceContext* deviceContext, ID3D11DepthStencilVie
 
 void MeshClass::Shutdown()
 {
-	for (unsigned int i = 0; i < boneSpheres.size(); i++)
-	{
-		boneSpheres[i]->Shutdown();
-		delete boneSpheres[i];
-	}
 	RELEASE_COM(vertexBuffer);
 	RELEASE_COM(indexBuffer);
 	RELEASE_COM(constantBuffer);
@@ -293,6 +293,12 @@ void MeshClass::Shutdown()
 	//	RELEASE_COM(texture);
 	RELEASE_COM(shaderResourceView);
 	RELEASE_COM(samplerState);
+
+	for (unsigned int i = 0; i < boneSpheres.size(); i++)
+	{
+		boneSpheres[i]->Shutdown();
+		delete boneSpheres[i];
+	}
 
 	//	p_dsView->Release();
 	p_rsSolid->Release();

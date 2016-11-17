@@ -74,7 +74,10 @@ V_OUT main(V_IN input)
 	output.uvOut = input.uvIn;
 
 	output.normalOut = mul(input.normalIn, (float3x3)worldMatrix);
-	//output.normalOut = normalize(output.normalOut);
+	output.normalOut = normalize(output.normalOut);
+	output.binormalOut = normalize(output.binormalOut);
+	output.tangentOut = normalize(output.tangentOut);
+
 
 	//	tempVert = XMVector4Transform(vertPos, blender.GetSkinningMatrix(vertOut[i].bone.x) * meshes[0].verts[i].weights.x);
 	//	tempVert += XMVector4Transform(vertPos, blender.GetSkinningMatrix(vertOut[i].bone.y) * meshes[0].verts[i].weights.y);
