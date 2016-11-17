@@ -7,9 +7,9 @@ void Blender::SetBones(int numBones)
 	blendTime = 0;
 }
 
-XMMATRIX Blender::GetSkinningMatrix(int index)
+std::vector<XMMATRIX> Blender::GetSkinningMatrix()
 {
-	return boneOffsetArray[index];
+	return boneOffsetArray;
 }
 
 void Blender::SetAnim(Interpolator* ani)
@@ -24,6 +24,7 @@ void Blender::SetNextAnim(Interpolator* ani)
 
 KeyFrame Blender::Update(float delta, std::vector<Vertex> verts, std::vector<TransformNode> hierarchy)
 {
+	//return *currAnim->GetAnimPtr()->keyFrames[2]
 	KeyFrame keyFrame = currAnim->Process(delta);
 
 	// SWITCHING ANIMATION

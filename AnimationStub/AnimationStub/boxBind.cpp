@@ -4,9 +4,6 @@
 #include "FBX_PS.csh"
 #include "Bone_VS.csh"
 #include "Bone_PS.csh"
-#define DIFFUSE 1
-#define SPECULAR 0
-#define NORMAL 0
 
 void MeshClass::Initialize(ID3D11Device* device)
 {
@@ -27,7 +24,7 @@ void MeshClass::Initialize(ID3D11Device* device)
 
 	device->CreateRasterizerState(&rs_solidDescrip, &p_rsSolid);
 	device->CreateRasterizerState(&rs_wireframeDescrip, &p_rsWireframe);
-	
+
 	//FBXLoader::Load("Death.fbx", meshes, transformHierarchy, animations, texture_name);
 	//Mesh mOne, mTwo;
 	//Animation aOne, aTwo;
@@ -37,12 +34,12 @@ void MeshClass::Initialize(ID3D11Device* device)
 	std::vector<Mesh> m;
 	string a;
 
-	FBXLoader::Load("Box_Idle.fbx", meshes, transformHierarchy, animations, a); // all bones from both .fbxs are being concatenated
-	FBXLoader::Load("Box_Jump.fbx", m, tn, animations, a); // tn is literally doing nothing
+	//FBXLoader::Load("Box_Idle.fbx", meshes, transformHierarchy, animations, a); // all bones from both .fbxs are being concatenated
+	//FBXLoader::Load("Box_Jump.fbx", m, tn, animations, a); // tn is literally doing nothing
 
-	//FBXLoader::Load("Run.fbx", meshes, transformHierarchy, animations, a); // all bones from both .fbxs are being concatenated
-	//FBXLoader::Load("Idle.fbx", m, tn, animations, a); // tn is literally doing nothing
-	
+	FBXLoader::Load("Idle.fbx", meshes, transformHierarchy, animations, a); // all bones from both .fbxs are being concatenated
+	FBXLoader::Load("Walk.fbx", m, tn, animations, a); // tn is literally doing nothing
+
 	for (UINT i = 0; i < transformHierarchy.size(); i++)
 	{
 		boneMatrices.push_back(transformHierarchy[i].GetLocal());
@@ -54,7 +51,7 @@ void MeshClass::Initialize(ID3D11Device* device)
 		0, 0, 1, 0,
 		0, 0, 0, 1
 	};
-	
+
 	interp.SetAnimPtr(&animations[0]);
 	interp2.SetAnimPtr(&animations[1]);
 	blender.SetAnim(&interp);
@@ -104,8 +101,24 @@ void MeshClass::Initialize(ID3D11Device* device)
 
 	device->CreateBuffer(&objectConstantBufferDesc, NULL, &constantBuffer);
 
+	D3D11_BUFFER_DESC boneBufferDesc;
+	ZeroMemory(&boneBufferDesc, sizeof(boneBufferDesc));
+	boneBufferDesc.ByteWidth = sizeof(BBUFFER);
+	boneBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+	boneBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	boneBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	boneBufferDesc.MiscFlags = 0;
+	boneBufferDesc.StructureByteStride = 0;
+
+	device->CreateBuffer(&boneBufferDesc, NULL, &boneBuffer);
+
+
 	//CreateDDSTextureFromFile(device, L"TestCube.dds", nullptr, &shaderResourceView);
-	CreateDDSTextureFromFile(device, L"PPG_3D_Player_N.dds", nullptr, &shaderResourceView);
+	CreateDDSTextureFromFile(device, L"PPG_3D_Player_D.dds", nullptr, &shaderResourceView);
+	CreateDDSTextureFromFile(device, L"PPG_3D_Player_N.dds", nullptr, &normalResourceView);
+	CreateDDSTextureFromFile(device, L"PPG_3D_Player_Spec.dds", nullptr, &specResourceView);
+
+
 	//const wchar_t* tex = (const wchar_t*)texture_name.c_str();
 	//CreateWICTextureFromFile(device, tex, nullptr, &shaderResourceView);
 
@@ -139,14 +152,14 @@ void MeshClass::Initialize(ID3D11Device* device)
 	objMat = XMMatrixMultiply(scaleMat, objMat);
 
 	XMStoreFloat4x4(&worldMatrix.objectMatrix, objMat);
-	
+
 	for (UINT i = 0; i < boneMatrices.size(); i++)
 	{
 		newboneSphere = new BoneSphere;
 		newboneSphere->Initialize(device, boneMatrices[i]);
 		boneSpheres.push_back(newboneSphere);
 	}
-		//delete newboneSphere;
+	//delete newboneSphere;
 
 }
 
@@ -159,71 +172,93 @@ void MeshClass::Render(ID3D11DeviceContext* deviceContext, ID3D11DepthStencilVie
 
 	deviceContext->VSSetConstantBuffers(0, 1, &constantBuffer);
 
+	D3D11_MAPPED_SUBRESOURCE boneRes;
+	deviceContext->Map(boneBuffer, NULL, D3D11_MAP_WRITE_DISCARD, NULL, &boneRes);
+	memcpy(boneRes.pData, &boneOffset, sizeof(BBUFFER));
+	deviceContext->Unmap(boneBuffer, NULL);
+
+	deviceContext->VSSetConstantBuffers(2, 1, &boneBuffer);
+
 	keyFrame = blender.Update(delta, meshes[0].verts, transformHierarchy);
 	std::vector<Vertex> vertOut = meshes[0].verts;
-
-	// ROUGHLY MATH FOR SMOOTH ShINNING
-	for (size_t i = 0; i < vertOut.size(); i++)
+	for (UINT i = 0; i < transformHierarchy.size(); i++)
 	{
-		XMVECTOR vertPos = XMVectorSet(meshes[0].verts[i].xyz.x, meshes[0].verts[i].xyz.y, meshes[0].verts[i].xyz.z, 1.f);// = XMLoadFloat3(&meshes[0].verts[i].xyz);
-		
-		XMVECTOR tempVert;
-		tempVert = XMVector4Transform(vertPos, blender.GetSkinningMatrix(vertOut[i].bone.x) * meshes[0].verts[i].weights.x);
-		tempVert += XMVector4Transform(vertPos, blender.GetSkinningMatrix(vertOut[i].bone.y) * meshes[0].verts[i].weights.y);
-		tempVert += XMVector4Transform(vertPos, blender.GetSkinningMatrix(vertOut[i].bone.z) * meshes[0].verts[i].weights.z);
-		tempVert += XMVector4Transform(vertPos, blender.GetSkinningMatrix(vertOut[i].bone.w) * meshes[0].verts[i].weights.w);
-	
-	
-		XMVECTOR norms = XMVectorSet(meshes[0].verts[i].normals.x, meshes[0].verts[i].normals.y, meshes[0].verts[i].normals.z, 0);
-		XMVECTOR tempNorm;
-		
-		tempNorm = XMVector4Transform(norms, blender.GetSkinningMatrix(vertOut[i].bone.x) * meshes[0].verts[i].weights.x);
-		tempNorm += XMVector4Transform(norms, blender.GetSkinningMatrix(vertOut[i].bone.y) * meshes[0].verts[i].weights.y);
-		tempNorm += XMVector4Transform(norms, blender.GetSkinningMatrix(vertOut[i].bone.z) * meshes[0].verts[i].weights.z);
-		tempNorm += XMVector4Transform(norms, blender.GetSkinningMatrix(vertOut[i].bone.w) * meshes[0].verts[i].weights.w);
-	
-		XMVECTOR tans = XMVectorSet(meshes[0].verts[i].tan.x, meshes[0].verts[i].tan.y, meshes[0].verts[i].tan.z, 0);
-		XMVECTOR tempTan;
-	
-		tempTan = XMVector4Transform(tans, blender.GetSkinningMatrix(vertOut[i].bone.x) * meshes[0].verts[i].weights.x);
-		tempTan += XMVector4Transform(tans, blender.GetSkinningMatrix(vertOut[i].bone.y) * meshes[0].verts[i].weights.y);
-		tempTan += XMVector4Transform(tans, blender.GetSkinningMatrix(vertOut[i].bone.z) * meshes[0].verts[i].weights.z);
-		tempTan += XMVector4Transform(tans, blender.GetSkinningMatrix(vertOut[i].bone.w) * meshes[0].verts[i].weights.w);
-	
-		XMVECTOR bis = XMVectorSet(meshes[0].verts[i].bin.x, meshes[0].verts[i].bin.y, meshes[0].verts[i].bin.z, 0);
-		XMVECTOR tempBis;
-	
-		tempBis = XMVector4Transform(bis, blender.GetSkinningMatrix(vertOut[i].bone.x) * meshes[0].verts[i].weights.x);
-		tempBis += XMVector4Transform(bis, blender.GetSkinningMatrix(vertOut[i].bone.y) * meshes[0].verts[i].weights.y);
-		tempBis += XMVector4Transform(bis, blender.GetSkinningMatrix(vertOut[i].bone.z) * meshes[0].verts[i].weights.z);
-		tempBis += XMVector4Transform(bis, blender.GetSkinningMatrix(vertOut[i].bone.w) * meshes[0].verts[i].weights.w);
-	
-		XMStoreFloat3(&vertOut[i].xyz, tempVert);
-		XMStoreFloat3(&vertOut[i].normals, tempNorm);
-		XMStoreFloat3(&vertOut[i].tan, tempTan);
-		XMStoreFloat3(&vertOut[i].bin, tempBis);
+		XMStoreFloat4x4(&boneOffset.boneOffsets[i], blender.GetSkinningMatrix()[i]);
 	}
 
+	// ROUGHLY MATH FOR SMOOTH ShINNING
+	//for (size_t i = 0; i < vertOut.size(); i++)
+	//{
+	//	XMVECTOR vertPos = XMVectorSet(meshes[0].verts[i].xyz.x, meshes[0].verts[i].xyz.y, meshes[0].verts[i].xyz.z, 1.f);// = XMLoadFloat3(&meshes[0].verts[i].xyz);
+	//	
+	//	XMVECTOR tempVert;
+	//	tempVert = XMVector4Transform(vertPos, blender.GetSkinningMatrix(vertOut[i].bone.x) * meshes[0].verts[i].weights.x);
+	//	tempVert += XMVector4Transform(vertPos, blender.GetSkinningMatrix(vertOut[i].bone.y) * meshes[0].verts[i].weights.y);
+	//	tempVert += XMVector4Transform(vertPos, blender.GetSkinningMatrix(vertOut[i].bone.z) * meshes[0].verts[i].weights.z);
+	//	tempVert += XMVector4Transform(vertPos, blender.GetSkinningMatrix(vertOut[i].bone.w) * meshes[0].verts[i].weights.w);
+	//
+	//
+	//	XMVECTOR norms = XMVectorSet(meshes[0].verts[i].normals.x, meshes[0].verts[i].normals.y, meshes[0].verts[i].normals.z, 0);
+	//	XMVECTOR tempNorm;
+	//	
+	//	tempNorm = XMVector4Transform(norms, blender.GetSkinningMatrix(vertOut[i].bone.x));
+	//	tempNorm += XMVector4Transform(norms, blender.GetSkinningMatrix(vertOut[i].bone.y));
+	//	tempNorm += XMVector4Transform(norms, blender.GetSkinningMatrix(vertOut[i].bone.z));
+	//	tempNorm += XMVector4Transform(norms, blender.GetSkinningMatrix(vertOut[i].bone.w));
+	//	
+	//	XMVector4Normalize(tempNorm);
+	//
+	//	XMVECTOR tans = XMVectorSet(meshes[0].verts[i].tan.x, meshes[0].verts[i].tan.y, meshes[0].verts[i].tan.z, 0);
+	//	XMVECTOR tempTan;
+	//
+	//	tempTan = XMVector4Transform(tans, blender.GetSkinningMatrix(vertOut[i].bone.x));
+	//	tempTan += XMVector4Transform(tans, blender.GetSkinningMatrix(vertOut[i].bone.y));
+	//	tempTan += XMVector4Transform(tans, blender.GetSkinningMatrix(vertOut[i].bone.z));
+	//	tempTan += XMVector4Transform(tans, blender.GetSkinningMatrix(vertOut[i].bone.w));
+	//
+	//	XMVector4Normalize(tempTan);
+	//
+	//	XMVECTOR bis = XMVectorSet(meshes[0].verts[i].bin.x, meshes[0].verts[i].bin.y, meshes[0].verts[i].bin.z, 0);
+	//	XMVECTOR tempBis;
+	//
+	//	tempBis = XMVector4Transform(bis, blender.GetSkinningMatrix(vertOut[i].bone.x));
+	//	tempBis += XMVector4Transform(bis, blender.GetSkinningMatrix(vertOut[i].bone.y));
+	//	tempBis += XMVector4Transform(bis, blender.GetSkinningMatrix(vertOut[i].bone.z));
+	//	tempBis += XMVector4Transform(bis, blender.GetSkinningMatrix(vertOut[i].bone.w));
+	//
+	//	XMVector4Normalize(tempBis);
+	//
+	//
+	//	XMStoreFloat3(&vertOut[i].xyz, tempVert);
+	//	XMStoreFloat3(&vertOut[i].normals, tempNorm);
+	//	XMStoreFloat3(&vertOut[i].tan, tempTan);
+	//	XMStoreFloat3(&vertOut[i].bin, tempBis);
+	//}
+
 	// RESETTING VERTEX BUFFER
-	D3D11_BUFFER_DESC vertexBufferDesc;
-	ZeroMemory(&vertexBufferDesc, sizeof(vertexBufferDesc));
-	vertexBufferDesc.Usage = D3D11_USAGE_IMMUTABLE;
-	vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-	vertexBufferDesc.CPUAccessFlags = NULL;
-	vertexBufferDesc.ByteWidth = sizeof(Vertex) * (UINT)meshes[0].verts.size();
-	vertexBufferDesc.MiscFlags = 0;
-	
-	D3D11_SUBRESOURCE_DATA initialDataVertex;
-	initialDataVertex.pSysMem = vertOut.data();
-	
-	HRESULT hr;
-	hr = device->CreateBuffer(&vertexBufferDesc, &initialDataVertex, &vertexBuffer);
-	
+	//D3D11_BUFFER_DESC vertexBufferDesc;
+	//ZeroMemory(&vertexBufferDesc, sizeof(vertexBufferDesc));
+	//vertexBufferDesc.Usage = D3D11_USAGE_IMMUTABLE;
+	//vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	//vertexBufferDesc.CPUAccessFlags = NULL;
+	//vertexBufferDesc.ByteWidth = sizeof(Vertex) * (UINT)meshes[0].verts.size();
+	//vertexBufferDesc.MiscFlags = 0;
+	//
+	//D3D11_SUBRESOURCE_DATA initialDataVertex;
+	//initialDataVertex.pSysMem = vertOut.data();
+	//
+	//HRESULT hr;
+	//hr = device->CreateBuffer(&vertexBufferDesc, &initialDataVertex, &vertexBuffer);
+
 	UINT stride = sizeof(Vertex);
 	UINT offset = 0;
 	deviceContext->IASetVertexBuffers(0, 1, &vertexBuffer, &stride, &offset);
-	
+
 	deviceContext->PSSetShaderResources(0, 1, &shaderResourceView);
+	deviceContext->PSSetShaderResources(1, 1, &normalResourceView);
+	deviceContext->PSSetShaderResources(2, 1, &specResourceView);
+
+
 	deviceContext->PSSetSamplers(0, 1, &samplerState);
 	deviceContext->PSSetSamplers(1, 1, &samplerState);
 
@@ -240,7 +275,7 @@ void MeshClass::Render(ID3D11DeviceContext* deviceContext, ID3D11DepthStencilVie
 	deviceContext->Draw((UINT)meshes[0].verts.size(), 0);
 	deviceContext->RSSetState(p_rsSolid);
 	for (UINT i = 0; i < keyFrame.bones.size(); i++)
-	XMStoreFloat4x4(&boneSpheres[i]->worldMatrix.objectMatrix, XMMatrixMultiply(boneScaleMatrix, keyFrame.bones[i]));
+		XMStoreFloat4x4(&boneSpheres[i]->worldMatrix.objectMatrix, XMMatrixMultiply(boneScaleMatrix, keyFrame.bones[i]));
 	// RENDER BONES
 	for (unsigned int i = 0; i < boneSpheres.size(); i++)
 		boneSpheres[i]->Render(deviceContext, delta);
@@ -249,22 +284,23 @@ void MeshClass::Render(ID3D11DeviceContext* deviceContext, ID3D11DepthStencilVie
 
 void MeshClass::Shutdown()
 {
-	for (unsigned int i = 0; i < boneSpheres.size(); i++)
-	{
-		boneSpheres[i]->Shutdown();
-		delete boneSpheres[i];
-	}
 	RELEASE_COM(vertexBuffer);
 	RELEASE_COM(indexBuffer);
 	RELEASE_COM(constantBuffer);
 	RELEASE_COM(inputLayout);
 	RELEASE_COM(vertexShader);
 	RELEASE_COM(pixelShader);
-//	RELEASE_COM(texture);
+	//	RELEASE_COM(texture);
 	RELEASE_COM(shaderResourceView);
 	RELEASE_COM(samplerState);
 
-//	p_dsView->Release();
+	for (unsigned int i = 0; i < boneSpheres.size(); i++)
+	{
+		boneSpheres[i]->Shutdown();
+		delete boneSpheres[i];
+	}
+
+	//	p_dsView->Release();
 	p_rsSolid->Release();
 	p_rsWireframe->Release();
 }

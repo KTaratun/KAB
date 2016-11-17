@@ -16,7 +16,7 @@ public:
 	float blendTime = 0;
 
 	void SetBones(int numBones);
-	XMMATRIX GetSkinningMatrix(int index); //Bone Offset
+	std::vector<XMMATRIX> GetSkinningMatrix(); //Bone Offset
 	void SetAnim(Interpolator* ani);
 	void SetNextAnim(Interpolator* ani);
 	KeyFrame Update(float delta, std::vector<Vertex> verts, std::vector<TransformNode> hierarchy);

@@ -56,9 +56,9 @@ KeyFrame Interpolator::Process(float time) // time should be added
 	float delta = 1 - (tweenTime / frameTime);
 
 	if (currentFrame->GetKeyFrameNum() == 30)
-		int i = 3;
+ 		int i = 3;
 
-	return *currentFrame;//Interpolate(currentFrame, currentFrame->GetNext(), delta);
+	return Interpolate(currentFrame, currentFrame->GetNext(), delta);
 }
 
 KeyFrame Interpolator::Interpolate(KeyFrame* current, KeyFrame* next, float delta)

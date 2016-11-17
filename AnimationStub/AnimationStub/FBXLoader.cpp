@@ -906,7 +906,7 @@ namespace FBXLoader
 		KeyFrame* old;
 		int totalFrames = 0;
 
-		for (FbxLongLong i = startFrame; i <= endFrame; ++i) //forced i to be 1 instead of start frame because the bind pose was messing with the mage's animations
+		for (FbxLongLong i = 1; i <= endFrame; ++i) //forced i to be 1 instead of start frame because the bind pose was messing with the mage's animations
 		{
 			//KeyFrame* currAnim = animation.keyFrames[i];
 			KeyFrame* currAnim = new KeyFrame();
@@ -949,7 +949,7 @@ namespace FBXLoader
 			animation.keyFrames.push_back(currAnim);
 			animation.keyFrames[totalFrames]->SetKeyTime(currTime);
 			animation.keyFrames[totalFrames]->SetKeyFrameNum((int)totalFrames);
-			if (i != 0)
+			if (i != 1)
 				old->SetNext(currAnim);
 
 			old = currAnim;
