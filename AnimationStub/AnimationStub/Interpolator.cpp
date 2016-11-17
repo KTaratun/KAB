@@ -26,37 +26,41 @@ KeyFrame Interpolator::Process(float time) // time should be added
 	//assert(animPtr);
 
 	if (currentFrame == NULL)
-		currentFrame = animPtr->keyFrames[0];
+		currentFrame = animPtr->keyFrames[1];
 
 	// Get new time 
 	AddTime(time);
-	//float other = animPtr->keyFrames[animPtr->keyFrames.size() - 2]->GetKeyTime().GetSecondDouble();
-	//float finalTime = animPtr->keyFrames[animPtr->keyFrames.size() - 1]->GetKeyTime().GetSecondDouble() - other;
-	//finalTime += animPtr->keyFrames[animPtr->keyFrames.size() - 1]->GetKeyTime().GetSecondDouble();
+	float other = (float)animPtr->keyFrames[animPtr->keyFrames.size() - 2]->GetKeyTime().GetSecondDouble();
 	float finalTime = (float)animPtr->keyFrames[animPtr->keyFrames.size() - 1]->GetKeyTime().GetSecondDouble();
-
-	if (currentTime > finalTime)
-	{
-		currentTime = 0;
-		currentFrame = animPtr->keyFrames[0];
-	}
+	float dif = finalTime - other;
+	finalTime = dif;
+	finalTime += (float)animPtr->keyFrames[animPtr->keyFrames.size() - 1]->GetKeyTime().GetSecondDouble();
 
 	float cFrameTime = (float)currentFrame->GetKeyTime().GetSecondDouble();
 	float nFrameTime = (float)currentFrame->GetNext()->GetKeyTime().GetSecondDouble();
-	float frameTime = nFrameTime - cFrameTime;
+
+	if (currentTime > finalTime)
+	{
+		currentFrame = animPtr->keyFrames[1];
+		currentTime = (float)currentFrame->GetKeyTime().GetSecondDouble();
+		cFrameTime = (float)currentFrame->GetKeyTime().GetSecondDouble();
+		nFrameTime = (float)currentFrame->GetNext()->GetKeyTime().GetSecondDouble();
+	}
 	
 	while (currentTime > nFrameTime)
 	{
 		currentFrame = currentFrame->GetNext();
 		cFrameTime = nFrameTime;
-		nFrameTime = (float)currentFrame->GetNext()->GetKeyTime().GetSecondDouble();
+
+		if (currentFrame->GetKeyFrameNum() == animPtr->keyFrames[animPtr->keyFrames.size() - 1]->GetKeyFrameNum())
+			nFrameTime = finalTime;
+		else
+			nFrameTime = (float)currentFrame->GetNext()->GetKeyTime().GetSecondDouble();
 	}
 	
+	float frameTime = nFrameTime - cFrameTime;
 	float tweenTime = nFrameTime - currentTime;
 	float delta = 1 - (tweenTime / frameTime);
-
-	if (currentFrame->GetKeyFrameNum() == 30)
- 		int i = 3;
 
 	return Interpolate(currentFrame, currentFrame->GetNext(), delta);
 }

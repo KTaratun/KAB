@@ -956,7 +956,7 @@ namespace FBXLoader
 			//currAnim = (currAnim->GetNext());
 			totalFrames++;
 		}
-		animation.keyFrames[animation.keyFrames.size() - 1]->SetNext(animation.keyFrames[0]);
+		animation.keyFrames[animation.keyFrames.size() - 1]->SetNext(animation.keyFrames[1]);
 
 		return true;
 		return false;
