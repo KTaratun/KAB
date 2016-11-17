@@ -87,7 +87,7 @@ float4 main(P_IN input) : SV_TARGET
 	//float surfaceRatio = saturate(dot((float3)bumpNormal, -(float3)spotDir));
 	float4 spotAttenuation = 1.0 - saturate(length((float3)spotPosition - (float3)input.WorldPos) / 30.0f);
 	float spotFactor = (surfaceRatio > spotRatio) ? 1 : 0;
-	float finalRatio = saturate(dot(spotDir, bumpNormal));
+	float finalRatio = saturate(dot(spotDir, input.normal));
 	float4 spotResult = spotAttenuation*finalRatio*textureColor*spotFactor;
 
 	//return directionResult + pointResult + spotResult;
