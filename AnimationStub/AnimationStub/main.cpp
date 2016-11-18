@@ -533,9 +533,7 @@ bool APP::ShutDown()
 	box->Shutdown();
 	delete box;
 
-	p_swapchain->Release();
 	p_RTV->Release();
-	p_device->Release();
 	p_context->Release();
 
 	p_sceneBuffer->Release();
@@ -546,6 +544,8 @@ bool APP::ShutDown()
 	p_dsView->Release();
 	p_rsSolid->Release();
 	p_rsWireframe->Release();
+	p_device->Release();
+	p_swapchain->Release();
 
 	UnregisterClass(L"DirectXApplication", h_application);
 	return true;

@@ -70,7 +70,7 @@ V_OUT main(V_IN input)
 	tempNorm += mul(BoneOffset[input.boneIn.w], float4(input.normalIn.x, input.normalIn.y, input.normalIn.z, 0)*input.weightIn.w);
 	output.normalOut = (float3)tempNorm;
 
-	output.tangentOut = cross(tempNorm, tempBi);
+	output.tangentOut = cross((float3)tempNorm, (float3)tempBi);
 
 	output.uvOut = input.uvIn;
 
