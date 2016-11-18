@@ -17,6 +17,7 @@ struct V_OUT
 	float3 tangentOut : TANGENT;
 	float4 positionOut : SV_POSITION;
 	float3 WorldPos : TEXCOORD1;
+	//float3 cameraPos : CAMERAPOS;
 };
 
 cbuffer OBJECT : register(b0)
@@ -60,14 +61,14 @@ V_OUT main(V_IN input)
 	tempBi += mul(BoneOffset[input.boneIn.y], float4(input.binormalIn.x, input.binormalIn.y, input.binormalIn.z, 0)*input.weightIn.y);
 	tempBi += mul(BoneOffset[input.boneIn.z], float4(input.binormalIn.x, input.binormalIn.y, input.binormalIn.z, 0)*input.weightIn.z);
 	tempBi += mul(BoneOffset[input.boneIn.w], float4(input.binormalIn.x, input.binormalIn.y, input.binormalIn.z, 0)*input.weightIn.w);
-	output.binormalOut = tempBi;
+	output.binormalOut = (float3)tempBi;
 
 	float4 tempTan;
 	tempTan = mul(BoneOffset[input.boneIn.x], float4(input.tangentIn.x, input.tangentIn.y, input.tangentIn.z, 0)*input.weightIn.x);
 	tempTan += mul(BoneOffset[input.boneIn.y], float4(input.tangentIn.x, input.tangentIn.y, input.tangentIn.z, 0)*input.weightIn.y);
 	tempTan += mul(BoneOffset[input.boneIn.z], float4(input.tangentIn.x, input.tangentIn.y, input.tangentIn.z, 0)*input.weightIn.z);
 	tempTan += mul(BoneOffset[input.boneIn.w], float4(input.tangentIn.x, input.tangentIn.y, input.tangentIn.z, 0)*input.weightIn.w);
-	output.tangentOut = tempTan;
+	output.tangentOut = (float3)tempTan;
 
 
 
