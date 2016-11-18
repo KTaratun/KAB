@@ -245,7 +245,7 @@ namespace FBXLoader
 			}
 
 			meshes.push_back(mesh);
-
+			
 			//std::vector<Vertex> verts;
 			//
 			//BinaryOut(mesh.verts, *head, fileName.c_str());
@@ -257,11 +257,11 @@ namespace FBXLoader
 			//f.pop_back();
 			//f += "_verts.bin";
 			//
-			//BinaryIn(verts, *head, f.c_str());
+			//BinaryIn(mesh.verts, *head, f.c_str());
 			//
-			//mesh.verts.clear();
-			//for (size_t i = 0; i < verts.size(); i++)
-			//	mesh.verts.push_back(verts[i]);
+			////mesh.verts.clear();
+			////for (size_t i = 0; i < verts.size(); i++)
+			////	mesh.verts.push_back(verts[i]);
 			//
 			////Vertex* v = &mesh.verts[92];
 			//
@@ -1137,19 +1137,19 @@ namespace FBXLoader
 
 			// write out header
 			binaryStream.write((const char*)&header, sizeof(BinaryHeader));
-
+			
 			binaryStream.write((const char*)&inVertexVector[0], header.vector_size);
 
 			binaryStream.close();
 
 
-			FILE* file = nullptr;
-
-			fopen_s(&file, filename.c_str(), "wb");
-
-			fwrite(&header, sizeof(BinaryHeader), 1, file);
-			fwrite(&inVertexVector[0], sizeof(Vertex), inVertexVector.size(), file);
-			fclose(file);
+			//FILE* file = nullptr;
+			//
+			//fopen_s(&file, filename.c_str(), "wb");
+			//
+			//fwrite(&header, sizeof(BinaryHeader), 1, file);
+			//fwrite(&inVertexVector[0], sizeof(Vertex), inVertexVector.size(), file);
+			//fclose(file);
 
 		}
 		else
@@ -1265,31 +1265,29 @@ namespace FBXLoader
 
 			outVertexVector.resize(header.file_size);
 			binaryStream.read((char*)&outVertexVector[0], header.file_size);
-			//CtrlPointIndicies.resize(header.CtrlPointIndicies_size);
-			//binaryStream.read((char*)&CtrlPointIndicies[0], header.CtrlPointIndicies_size);
 
 			binaryStream.close();
 
 
-			std::vector<BYTE> bytes;
-			bytes.resize(header.file_size);
-
-			binaryStream.read((char*)&bytes[0], header.file_size);
-
-			Vertex* v = reinterpret_cast<Vertex*>(&bytes[0]);
-			FILE* file = nullptr;
-
-			fopen_s(&file, filename.c_str(), "rb");
-
-			fseek(file, 0, SEEK_END);
-			long size = ftell(file);
-			size -= sizeof(BinaryHeader);
-			fseek(file, 0, SEEK_SET);
-			bytes.resize(size);
-			fread(&bytes[0], sizeof(uint8_t), size, file);
-			fclose(file);
-
-			v = reinterpret_cast<Vertex*>(&bytes[0]);
+			//std::vector<BYTE> bytes;
+			//bytes.resize(header.file_size);
+			//
+			//binaryStream.read((char*)&bytes[0], header.file_size);
+			//
+			//Vertex* v = reinterpret_cast<Vertex*>(&bytes[0]);
+			//FILE* file = nullptr;
+			//
+			//fopen_s(&file, filename.c_str(), "rb");
+			//
+			//fseek(file, 0, SEEK_END);
+			//long size = ftell(file);
+			//size -= sizeof(BinaryHeader);
+			//fseek(file, 0, SEEK_SET);
+			//bytes.resize(size);
+			//fread(&bytes[0], sizeof(uint8_t), size, file);
+			//fclose(file);
+			//
+			//v = reinterpret_cast<Vertex*>(&bytes[0]);
 		}
 		else
 			return false;
