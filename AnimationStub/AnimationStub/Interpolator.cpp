@@ -30,8 +30,8 @@ KeyFrame Interpolator::Process(float time) // time should be added
 
 	// Get new time 
 	AddTime(time);
-	float other = (float)animPtr->keyFrames[animPtr->keyFrames.size() - 2]->GetKeyTime().GetSecondDouble();
-	float finalTime = (float)animPtr->keyFrames[animPtr->keyFrames.size() - 1]->GetKeyTime().GetSecondDouble();
+	float other = animPtr->keyFrames[animPtr->keyFrames.size() - 2]->GetKeyTime().GetSecondDouble();
+	float finalTime = animPtr->keyFrames[animPtr->keyFrames.size() - 1]->GetKeyTime().GetSecondDouble();
 	float dif = finalTime - other;
 	finalTime = dif;
 	finalTime += (float)animPtr->keyFrames[animPtr->keyFrames.size() - 1]->GetKeyTime().GetSecondDouble();
@@ -42,7 +42,7 @@ KeyFrame Interpolator::Process(float time) // time should be added
 	if (currentTime > finalTime)
 	{
 		currentFrame = animPtr->keyFrames[1];
-		currentTime = (float)currentFrame->GetKeyTime().GetSecondDouble();
+		currentTime = currentFrame->GetKeyTime().GetSecondDouble();
 		cFrameTime = (float)currentFrame->GetKeyTime().GetSecondDouble();
 		nFrameTime = (float)currentFrame->GetNext()->GetKeyTime().GetSecondDouble();
 	}

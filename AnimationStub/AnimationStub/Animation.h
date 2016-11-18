@@ -4,13 +4,13 @@
 #include "KeyFrame.h"
 #include <fbxsdk.h>
 
-struct Channel
-{
-	// This should not be a constant in your version
-	static const int NUMBER_OF_KEYS_FOR_THIS_JOINT = 42;
-
-	KeyFrame keyFrames[NUMBER_OF_KEYS_FOR_THIS_JOINT];
-};
+//struct Channel
+//{
+//	// This should not be a constant in your version
+//	static const int NUMBER_OF_KEYS_FOR_THIS_JOINT = 42;
+//
+//	KeyFrame keyFrames[NUMBER_OF_KEYS_FOR_THIS_JOINT];
+//};
 
 class Animation
 {
@@ -26,6 +26,7 @@ public:
 
 	//KeyFrame* keyFrames[42];
 	std::vector<KeyFrame*> keyFrames;
+	std::vector<KeyFrame> keyFrames2;
 private:
 	FbxString animName;
 

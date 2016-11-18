@@ -80,7 +80,7 @@ float4 main(P_IN input) : SV_TARGET
 
 	//Spotlight
 	float3 spotDir = normalize(spotPosition.xyz - input.WorldPos);
-	float surfaceRatio = saturate(dot(-(float3)spotDir, spotDirection));
+	float surfaceRatio = saturate(dot(-float4(spotDir, 0), spotDirection));
 	//float3 cameraDir = normalize(input.position - input.WorldPos);
 	//float3 reflectionVec = normalize(reflect(spotDirection, bumpNormal));
 	//float specular = pow(saturate(dot(reflectionVec, cameraDir)), 1000)*30.0f;

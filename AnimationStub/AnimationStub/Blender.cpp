@@ -24,8 +24,7 @@ void Blender::SetNextAnim(Interpolator* ani)
 
 KeyFrame Blender::Update(float delta, std::vector<Vertex> verts, std::vector<TransformNode> hierarchy)
 {
-	//return *currAnim->GetAnimPtr()->keyFrames[2]
-	KeyFrame keyFrame = currAnim->Process(delta*.3);
+	KeyFrame keyFrame = currAnim->Process(delta);
 
 	// SWITCHING ANIMATION
 	if (GetAsyncKeyState(VK_TAB) && pressed != true && blendTime <= 0)
@@ -61,7 +60,4 @@ KeyFrame Blender::Update(float delta, std::vector<Vertex> verts, std::vector<Tra
 		boneOffsetArray[i] = bO;
 	}
 	return keyFrame;
-	// UPDATING BONE DATA
-	//for (UINT i = 0; i < keyframe.bones.size(); i++)
-	//XMStoreFloat4x4(&boneSpheres[i]->worldMatrix.objectMatrix, XMMatrixMultiply(boneScaleMatrix, keyframe.bones[i]));
 }
