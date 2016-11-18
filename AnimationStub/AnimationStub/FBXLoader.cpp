@@ -244,28 +244,28 @@ namespace FBXLoader
 				return false;
 			}
 
-			//meshes.push_back(mesh);
-
-			std::vector<Vertex> verts;
-			
-			BinaryOut(mesh.verts, *head, fileName.c_str());
-			
-			string f = fileName;
-			f.pop_back();
-			f.pop_back();
-			f.pop_back();
-			f.pop_back();
-			f += "_verts.bin";
-			
-			BinaryIn(verts, *head, f.c_str());
-			
-			mesh.verts.clear();
-			for (size_t i = 0; i < verts.size(); i++)
-				mesh.verts.push_back(verts[i]);
-			
-			//Vertex* v = &mesh.verts[92];
-			
 			meshes.push_back(mesh);
+
+			//std::vector<Vertex> verts;
+			//
+			//BinaryOut(mesh.verts, *head, fileName.c_str());
+			//
+			//string f = fileName;
+			//f.pop_back();
+			//f.pop_back();
+			//f.pop_back();
+			//f.pop_back();
+			//f += "_verts.bin";
+			//
+			//BinaryIn(verts, *head, f.c_str());
+			//
+			//mesh.verts.clear();
+			//for (size_t i = 0; i < verts.size(); i++)
+			//	mesh.verts.push_back(verts[i]);
+			//
+			////Vertex* v = &mesh.verts[92];
+			//
+			//meshes.push_back(mesh);
 		}
 		Animation ani;
 		// Get the number of animation stacks
@@ -291,24 +291,24 @@ namespace FBXLoader
 
 		animation.push_back(ani);
 
-		std::vector<KeyFrame> k;
-		std::vector<KeyFrame> e;
-
-		for (size_t i = 0; i < animation[0].keyFrames.size(); i++)
-			k.push_back(*animation[0].keyFrames[i]);
-
-		BinaryOut(k, *head, fileName.c_str());
-
-		string f = fileName;
-		f.pop_back();
-		f.pop_back();
-		f.pop_back();
-		f.pop_back();
-		f += "_keyFrames.bin";
-
-		BinaryIn(k, *head, f.c_str());
-
-		animation[0].keyFrames2 = k;
+		//std::vector<KeyFrame> k;
+		//std::vector<KeyFrame> e;
+		//
+		//for (size_t i = 0; i < animation[0].keyFrames.size(); i++)
+		//	k.push_back(*animation[0].keyFrames[i]);
+		//
+		//BinaryOut(k, *head, fileName.c_str());
+		//
+		//string f = fileName;
+		//f.pop_back();
+		//f.pop_back();
+		//f.pop_back();
+		//f.pop_back();
+		//f += "_keyFrames.bin";
+		//
+		//BinaryIn(k, *head, f.c_str());
+		//
+		//animation[0].keyFrames2 = k;
 
 		//for (size_t i = 0; i < animation[0].keyFrames.size(); i++)
 		//	e.push_back(k[i * sizeof(KeyFrame)]);

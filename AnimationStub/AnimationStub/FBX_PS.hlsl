@@ -12,6 +12,7 @@ struct P_IN
 	float3 tangent : TANGENT;
 	float4 position : SV_POSITION;
 	float3 WorldPos : TEXCOORD1;
+	//float3 cameraPos : CAMERAPOS;
 };
 
 cbuffer LightBuffer1 : register(b0)
@@ -54,15 +55,15 @@ cbuffer LightBuffer1 : register(b0)
 float4 main(P_IN input) : SV_TARGET
 {
 
-	float4 textureColor = baseTexture.Sample(filters[0], input.uv);
-	float4 bumpMap = normalTexture.Sample(filters[0], input.uv);
-	float4 specMap = specTexture.Sample(filters[0], input.uv);
+	float4 textureColor = baseTexture.Sample(filters[0], (float2)input.uv);
+	float4 bumpMap = normalTexture.Sample(filters[0], (float2)input.uv);
+	float4 specMap = specTexture.Sample(filters[0], (float2)input.uv);
 
 	//Ambient Light
 	float4 ambientResult = ambientDiffuse*textureColor;
 
 	//Normalize
-	
+
 
 	////Directional Light
 	//float directionalRatio = saturate(dot(-lightDirection, input.normal));
@@ -80,8 +81,8 @@ float4 main(P_IN input) : SV_TARGET
 
 	//Spotlight
 	float3 spotDir = normalize(spotPosition.xyz - input.WorldPos);
-	float surfaceRatio = saturate(dot(-float4(spotDir, 0), spotDirection));
-	//float3 cameraDir = normalize(input.position - input.WorldPos);
+	float surfaceRatio = saturate(dot(-(float3)spotDir, (float3)spotDirection));
+	float3 cameraDir = normalize((float3)input.position - input.WorldPos);
 	//float3 reflectionVec = normalize(reflect(spotDirection, bumpNormal));
 	//float specular = pow(saturate(dot(reflectionVec, cameraDir)), 1000)*30.0f;
 	//float surfaceRatio = saturate(dot((float3)bumpNormal, -(float3)spotDir));
@@ -90,8 +91,22 @@ float4 main(P_IN input) : SV_TARGET
 	float finalRatio = saturate(dot(spotDir, bumpNormal));
 	float4 spotResult = spotAttenuation*finalRatio*textureColor*spotFactor;
 
+	if (finalRatio > 0.0f)
+	{
+		float3 reflectionVec = reflect(spotDir, input.normal);//spotDir - ((spotDir + spotDir) + (input.normal * 2 * (dot(input.normal, -spotDir))));// normalize(2 * finalRatio * bumpNormal + spotDir);
+		//Reflection Direction = Light Direction - ((Light Direction + Light Direction) + (Normal * 2 * (Normal dot - Light Direction)))
+		//float3 cameraDir = normalize(input.position);
+
+		float specular = 10.0f*pow(saturate(dot(reflectionVec, cameraDir)), 1000);
+
+		specular = specular * (float)specMap;
+
+
+		spotResult = saturate(spotResult + specular);
+	}
+
 	//return directionResult + pointResult + spotResult;
-	return /*textureColor* */saturate(ambientResult + spotResult);
+	return/* textureColor**/ ambientResult + spotResult;
 	//return textureColor * saturate(ambientResult + directionResult + spotResult + pointResult)
 	//return textureColor;
 }

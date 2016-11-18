@@ -116,8 +116,7 @@ void MeshClass::Initialize(ID3D11Device* device)
 	//CreateDDSTextureFromFile(device, L"TestCube.dds", nullptr, &shaderResourceView);
 	CreateDDSTextureFromFile(device, L"PPG_3D_Player_D.dds", nullptr, &shaderResourceView);
 	CreateDDSTextureFromFile(device, L"PPG_3D_Player_N.dds", nullptr, &normalResourceView);
-	CreateDDSTextureFromFile(device, L"PPG_3D_Player_Spec.dds", nullptr, &specResourceView);
-
+	CreateDDSTextureFromFile(device, L"PPG_3D_Player_spec.dds", nullptr, &specResourceView);
 
 	//const wchar_t* tex = (const wchar_t*)texture_name.c_str();
 	//CreateWICTextureFromFile(device, tex, nullptr, &shaderResourceView);
