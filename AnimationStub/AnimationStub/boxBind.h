@@ -36,7 +36,7 @@ class MeshClass
 	std::vector<BoneSphere*> boneSpheres;
 	std::vector<XMMATRIX> boneMatrices;
 	BoneSphere* newboneSphere;
-	KeyFrame* old = new KeyFrame();
+	KeyFrame* old;
 	KeyFrame keyFrame;
 	XMMATRIX boneScaleMatrix =
 	{
