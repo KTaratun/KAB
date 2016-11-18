@@ -26,7 +26,6 @@ public:
 
 	//KeyFrame* keyFrames[42];
 	std::vector<KeyFrame*> keyFrames;
-	std::vector<KeyFrame> keyFrames2;
 private:
 	FbxString animName;
 

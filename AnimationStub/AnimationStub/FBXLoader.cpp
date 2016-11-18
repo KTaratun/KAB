@@ -244,6 +244,9 @@ namespace FBXLoader
 				return false;
 			}
 
+			for (size_t i = 0; i < cps.size(); i++)
+				delete cps[i];
+
 			meshes.push_back(mesh);
 			
 			//std::vector<Vertex> verts;
@@ -288,6 +291,8 @@ namespace FBXLoader
 
 		// Perform key reduction on the animation
 		KeyReduction(ani);
+
+		manager->Destroy();
 
 		animation.push_back(ani);
 
@@ -349,9 +354,9 @@ namespace FBXLoader
 				FbxNodeAttribute* nodeAttr = obj->GetNodeAttributeByIndex(j);
 				if (nodeAttr->GetAttributeType() == FbxNodeAttribute::eSkeleton) // || nodeAttr->GetAttributeType() == FbxNodeAttribute::eMesh
 				{
-					TransformNode *tN = new TransformNode();
-					tN->SetName(obj->GetName());
-					transformHierarchy.push_back(*tN);
+					TransformNode tN;
+					tN.SetName(obj->GetName());
+					transformHierarchy.push_back(tN);
 					fbx_joints.push_back(obj);
 					break;
 				}

@@ -229,6 +229,10 @@ void MeshClass::Shutdown()
 	RELEASE_COM(shaderResourceView);
 	RELEASE_COM(samplerState);
 
+	for (size_t i = 0; i < animations.size(); i++)
+		for (size_t j = 0; j < animations[i].keyFrames.size(); j++)
+			delete animations[i].keyFrames[j];
+
 	for (unsigned int i = 0; i < boneSpheres.size(); i++)
 	{
 		boneSpheres[i]->Shutdown();
