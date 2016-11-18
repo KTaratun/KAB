@@ -370,7 +370,7 @@ void BoneSphere::Shutdown()
 	RELEASE_COM(inputLayout);
 	RELEASE_COM(vertexShader);
 	RELEASE_COM(pixelShader);
-	//RELEASE_COM(texture);
+//	RELEASE_COM(texture);
 	RELEASE_COM(shaderResourceView);
 	RELEASE_COM(samplerState);
 }

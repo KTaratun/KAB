@@ -93,7 +93,7 @@ float4 main(P_IN input) : SV_TARGET
 
 	if (finalRatio > 0.0f)
 	{
-		float3 reflectionVec = reflect((float3)spotDir, (float3)bumpMap);//spotDir - ((spotDir + spotDir) + (input.normal * 2 * (dot(input.normal, -spotDir))));// normalize(2 * finalRatio * bumpNormal + spotDir);
+		float3 reflectionVec = reflect(spotDir, (float3)bumpMap);//spotDir - ((spotDir + spotDir) + (input.normal * 2 * (dot(input.normal, -spotDir))));// normalize(2 * finalRatio * bumpNormal + spotDir);
 		//Reflection Direction = Light Direction - ((Light Direction + Light Direction) + (Normal * 2 * (Normal dot - Light Direction)))
 		//float3 cameraDir = normalize(input.position);
 
