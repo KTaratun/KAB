@@ -63,14 +63,14 @@ V_OUT main(V_IN input)
 	tempBi += mul(BoneOffset[input.boneIn.w], float4(input.binormalIn.x, input.binormalIn.y, input.binormalIn.z, 0)*input.weightIn.w);
 	output.binormalOut = (float3)tempBi;
 
-	float4 tempTan;
-	tempTan = mul(BoneOffset[input.boneIn.x], float4(input.tangentIn.x, input.tangentIn.y, input.tangentIn.z, 0)*input.weightIn.x);
-	tempTan += mul(BoneOffset[input.boneIn.y], float4(input.tangentIn.x, input.tangentIn.y, input.tangentIn.z, 0)*input.weightIn.y);
-	tempTan += mul(BoneOffset[input.boneIn.z], float4(input.tangentIn.x, input.tangentIn.y, input.tangentIn.z, 0)*input.weightIn.z);
-	tempTan += mul(BoneOffset[input.boneIn.w], float4(input.tangentIn.x, input.tangentIn.y, input.tangentIn.z, 0)*input.weightIn.w);
-	output.tangentOut = (float3)tempTan;
+	float4 tempNorm;
+	tempNorm = mul(BoneOffset[input.boneIn.x], float4(input.normalIn.x, input.normalIn.y, input.normalIn.z, 0)*input.weightIn.x);
+	tempNorm += mul(BoneOffset[input.boneIn.y], float4(input.normalIn.x, input.normalIn.y, input.normalIn.z, 0)*input.weightIn.y);
+	tempNorm += mul(BoneOffset[input.boneIn.z], float4(input.normalIn.x, input.normalIn.y, input.normalIn.z, 0)*input.weightIn.z);
+	tempNorm += mul(BoneOffset[input.boneIn.w], float4(input.normalIn.x, input.normalIn.y, input.normalIn.z, 0)*input.weightIn.w);
+	output.normalOut = (float3)tempNorm;
 
-
+	output.tangentOut = cross(tempNorm, tempBi);
 
 	output.uvOut = input.uvIn;
 
